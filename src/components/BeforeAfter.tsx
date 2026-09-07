@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useCallback } from 'react'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { ChevronsLeftRight } from 'lucide-react'
 
 const projects = [
   {
@@ -24,21 +25,28 @@ const projects = [
 
 export default function BeforeAfter() {
   const [activeProject, setActiveProject] = useState(0)
-  const [sliderPos, setSliderPos] = useState(50)
   const [isDragging, setIsDragging] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const sliderRaw = useMotionValue(50)
+  const sliderPos = useSpring(sliderRaw, { stiffness: 400, damping: 35, mass: 0.5 })
+  const clipPath = useTransform(sliderPos, (v) => `inset(0 ${100 - v}% 0 0)`)
+  const handleLeft = useTransform(sliderPos, (v) => `${v}%`)
 
   const project = projects[activeProject]
 
-  const handleMove = (clientX: number, rect: DOMRect) => {
+  const handleMove = useCallback((clientX: number) => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
     const pos = ((clientX - rect.left) / rect.width) * 100
-    setSliderPos(Math.min(Math.max(pos, 5), 95))
-  }
+    sliderRaw.set(Math.min(Math.max(pos, 5), 95))
+  }, [sliderRaw])
 
   return (
-    <section id="transformations" className="relative py-32 px-6">
+    <section id="transformations" className="section-wrap relative">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/5 to-transparent pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative">
+      <div className="section-inner relative">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -50,7 +58,7 @@ export default function BeforeAfter() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mt-4 mb-4">
             Avant / Après
           </h2>
-          <p className="text-white/40 text-lg max-w-xl mx-auto">
+          <p className="text-white/40 text-lg xl:text-xl max-w-xl xl:max-w-2xl mx-auto">
             Glissez pour découvrir la transformation. Chaque projet commence par une maquette gratuite.
           </p>
         </motion.div>
@@ -58,31 +66,35 @@ export default function BeforeAfter() {
         {/* Project tabs */}
         <div className="flex justify-center gap-3 mb-10 flex-wrap">
           {projects.map((p, i) => (
-            <button
+            <motion.button
               key={p.name}
-              onClick={() => { setActiveProject(i); setSliderPos(50) }}
-              className={`px-4 py-2 rounded-full text-sm transition-all duration-300 ${
+              onClick={() => { setActiveProject(i); sliderRaw.set(50) }}
+              className={`px-4 py-2 rounded-full text-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 activeProject === i
                   ? 'bg-white/10 text-white border border-white/20'
-                  : 'text-white/40 hover:text-white/60 border border-transparent'
+                  : 'text-white/40 hover:text-white/80 hover:bg-white/[0.03] border border-transparent'
               }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             >
               {p.name}
-            </button>
+            </motion.button>
           ))}
         </div>
 
         {/* Before/After slider */}
         <motion.div
+          ref={containerRef}
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50 select-none"
-          onMouseMove={(e) => isDragging && handleMove(e.clientX, e.currentTarget.getBoundingClientRect())}
+          className="relative w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50 select-none"
+          onMouseMove={(e) => isDragging && handleMove(e.clientX)}
           onMouseUp={() => setIsDragging(false)}
           onMouseLeave={() => setIsDragging(false)}
-          onTouchMove={(e) => handleMove(e.touches[0].clientX, e.currentTarget.getBoundingClientRect())}
+          onTouchMove={(e) => handleMove(e.touches[0].clientX)}
         >
           {/* Browser chrome */}
           <div className="bg-zinc-900 px-4 py-3 flex items-center gap-2 border-b border-white/5">
@@ -105,30 +117,29 @@ export default function BeforeAfter() {
             </div>
 
             {/* Before (clipped) */}
-            <div
+            <motion.div
               className={`absolute inset-0 bg-gradient-to-br ${project.before.bg} p-8 overflow-hidden`}
-              style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+              style={{ clipPath }}
             >
               <MockupContent variant="before" project={project} />
-            </div>
+            </motion.div>
 
-            {/* Slider handle */}
-            <div
-              className="absolute top-0 bottom-0 w-1 bg-white/80 cursor-col-resize z-20"
-              style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
+            <motion.div
+              className="absolute top-0 bottom-0 w-0.5 bg-white/80 cursor-col-resize z-20"
+              style={{ left: handleLeft, x: '-50%' }}
               onMouseDown={() => setIsDragging(true)}
               onTouchStart={() => setIsDragging(true)}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#333" strokeWidth="2">
-                  <path d="M5 4l-3 4 3 4M11 4l3 4-3 4" />
-                </svg>
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-105"
+              >
+                <ChevronsLeftRight size={16} className="text-zinc-700" strokeWidth={2} />
               </div>
-            </div>
+            </motion.div>
 
             {/* Labels */}
-            <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-black/50 text-xs text-white/60 backdrop-blur-sm z-10">Avant</div>
-            <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-indigo-500/30 text-xs text-indigo-200 backdrop-blur-sm z-10">Après</div>
+            <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-black/60 text-xs text-white/60 z-10">Avant</div>
+            <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-indigo-950/70 text-xs text-indigo-200 z-10">Après</div>
           </div>
         </motion.div>
 

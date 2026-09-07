@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Sparkles } from 'lucide-react'
+import { CtaIcon } from './icons'
 
 const situations = [
   { value: 'existing', label: "J'ai déjà un site" },
@@ -23,12 +25,12 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="relative py-32 px-6">
+    <section id="contact" className="section-wrap relative">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600/10 blur-[150px] rounded-full" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/10 blur-[150px] rounded-full" />
       </div>
 
-      <div className="max-w-3xl mx-auto relative">
+      <div className="section-inner max-w-3xl relative">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -56,9 +58,9 @@ export default function Contact() {
             <motion.div
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="w-16 h-16 mx-auto mb-6 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-2xl"
+              className="w-16 h-16 mx-auto mb-6 rounded-full bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-indigo-300"
             >
-              ✦
+              <Sparkles size={28} strokeWidth={1.75} />
             </motion.div>
             <h3 className="text-2xl font-semibold mb-3">Demande envoyée !</h3>
             <p className="text-white/40">
@@ -118,10 +120,10 @@ export default function Contact() {
                     key={s.value}
                     type="button"
                     onClick={() => setForm({ ...form, situation: s.value })}
-                    className={`p-3 rounded-xl text-sm text-left transition-all duration-300 ${
+                    className={`p-3 rounded-xl text-sm text-left transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                       form.situation === s.value
-                        ? 'bg-indigo-500/20 border border-indigo-500/40 text-white'
-                        : 'bg-white/[0.03] border border-white/5 text-white/40 hover:border-white/10'
+                        ? 'bg-indigo-500/15 border border-indigo-500/35 text-white scale-[1.02]'
+                        : 'bg-white/[0.03] border border-white/5 text-white/40 hover:border-white/15 hover:bg-white/[0.05] hover:text-white/70'
                     }`}
                   >
                     {s.label}
@@ -141,8 +143,9 @@ export default function Contact() {
               />
             </div>
 
-            <button type="submit" className="btn-primary w-full text-lg py-4">
-              ✦ Demander ma maquette gratuite
+            <button type="submit" className="btn-primary w-full inline-flex items-center justify-center gap-2">
+              <CtaIcon size={18} />
+              Demander ma maquette gratuite
             </button>
 
             <p className="text-center text-xs text-white/25">
