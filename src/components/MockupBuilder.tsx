@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Sparkles } from 'lucide-react'
+import { Check, FileText, Sparkles } from 'lucide-react'
 import { CtaIcon } from './icons'
 
 const buildSteps = [
-  { label: 'Analyse', duration: 2000 },
-  { label: 'Structure', duration: 2500 },
-  { label: 'Design', duration: 3000 },
-  { label: 'Maquette', duration: 2500 },
+  { label: 'Analyse', subtitle: 'Comprendre vos objectifs et votre marché.', duration: 2000 },
+  { label: 'Structure', subtitle: 'Organiser les pages et le parcours utilisateur.', duration: 2500 },
+  { label: 'Design', subtitle: 'Poser l\'identité visuelle et les composants clés.', duration: 3000 },
+  { label: 'Maquette', subtitle: 'Livrer une proposition visuelle concrète, gratuite.', duration: 2500 },
+  {
+    label: 'Validation & devis',
+    subtitle: 'Vous validez la direction. Sirius vous transmet un devis détaillé.',
+    duration: 2500,
+  },
 ]
 
 export default function MockupBuilder() {
@@ -44,7 +49,7 @@ export default function MockupBuilder() {
             Votre maquette se construit
           </h2>
           <p className="text-white/40 text-lg xl:text-xl max-w-xl xl:max-w-2xl mx-auto">
-            De votre idée à une expérience visuelle concrète — en quelques jours, gratuitement.
+            De votre idée à une expérience visuelle concrète, en quelques jours, gratuitement.
           </p>
         </motion.div>
 
@@ -74,12 +79,15 @@ export default function MockupBuilder() {
                 <div className="flex-1">
                   <p className={`font-medium ${currentStep === i ? 'text-white' : 'text-white/50'}`}>{step.label}</p>
                   {currentStep === i && (
-                    <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
+                    <>
+                      <p className="text-xs text-white/35 mt-1 leading-relaxed">{step.subtitle}</p>
+                      <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -216,39 +224,93 @@ function MockupStage({ step, progress }: { step: number; progress: number }) {
     )
   }
 
-  return (
-    <div>
-      <p className="text-xs text-indigo-300/60 uppercase tracking-wider mb-4 flex items-center gap-2">
-        Maquette finale
-        <Sparkles size={12} className="text-indigo-400" strokeWidth={2} />
-      </p>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="h-4 bg-indigo-400/40 rounded w-20 shimmer" />
-          <div className="flex gap-3">
-            {['Accueil', 'Services', 'Contact'].map((n) => (
-              <span key={n} className="text-[10px] text-indigo-200/50">{n}</span>
+  if (step === 3) {
+    return (
+      <div>
+        <p className="text-xs text-indigo-300/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+          Maquette finale
+          <Sparkles size={12} className="text-indigo-400" strokeWidth={2} />
+        </p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="h-4 bg-indigo-400/40 rounded w-20 shimmer" />
+            <div className="flex gap-3">
+              {['Accueil', 'Services', 'Contact'].map((n) => (
+                <span key={n} className="text-[10px] text-indigo-200/50">{n}</span>
+              ))}
+            </div>
+          </div>
+          <div className="h-24 bg-gradient-to-r from-indigo-500/20 via-purple-500/15 to-indigo-500/20 rounded-xl border border-indigo-500/20 flex items-center justify-center">
+            <motion.div
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="text-center"
+            >
+              <div className="h-4 bg-white/20 rounded w-32 mx-auto mb-2 shimmer" />
+              <div className="h-8 bg-indigo-500/30 rounded-full w-24 mx-auto border border-indigo-400/30" />
+            </motion.div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-14 bg-white/5 rounded-lg border border-white/5 p-2">
+                <div className="h-2 bg-indigo-400/20 rounded w-2/3 mb-1" />
+                <div className="h-1.5 bg-white/5 rounded w-full" />
+              </div>
             ))}
           </div>
         </div>
-        <div className="h-24 bg-gradient-to-r from-indigo-500/20 via-purple-500/15 to-indigo-500/20 rounded-xl border border-indigo-500/20 flex items-center justify-center">
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-indigo-300/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+        Validation & devis
+        <FileText size={12} className="text-indigo-400" strokeWidth={2} />
+      </p>
+      <div className="space-y-3">
+        {[
+          'Direction créative validée',
+          'Devis détaillé transmis',
+          'Planning de réalisation proposé',
+        ].map((item, i) => (
           <motion.div
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="text-center"
+            key={item}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: progress > i * 28 ? 1 : 0.25, x: 0 }}
+            className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.03]"
           >
-            <div className="h-4 bg-white/20 rounded w-32 mx-auto mb-2 shimmer" />
-            <div className="h-8 bg-indigo-500/30 rounded-full w-24 mx-auto border border-indigo-400/30" />
-          </motion.div>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-14 bg-white/5 rounded-lg border border-white/5 p-2">
-              <div className="h-2 bg-indigo-400/20 rounded w-2/3 mb-1" />
-              <div className="h-1.5 bg-white/5 rounded w-full" />
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                progress > i * 28
+                  ? 'bg-emerald-500/15 border border-emerald-400/30 text-emerald-300'
+                  : 'bg-white/5 border border-white/10 text-white/25'
+              }`}
+            >
+              {progress > i * 28 ? (
+                <Check size={13} strokeWidth={2.5} />
+              ) : (
+                <span className="text-[10px]">{i + 1}</span>
+              )}
             </div>
-          ))}
-        </div>
+            <span className="text-sm text-white/55">{item}</span>
+          </motion.div>
+        ))}
+        <motion.div
+          animate={{ opacity: progress > 75 ? 1 : 0.3 }}
+          className="mt-4 p-4 rounded-xl border border-indigo-400/20 bg-indigo-500/10"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <FileText size={14} className="text-indigo-300" strokeWidth={1.75} />
+            <span className="text-xs font-medium text-indigo-200/80">Proposition commerciale</span>
+          </div>
+          <div className="space-y-2">
+            <div className="h-2 bg-white/10 rounded w-full" />
+            <div className="h-2 bg-white/10 rounded w-5/6" />
+            <div className="h-2 bg-indigo-400/25 rounded w-1/3 mt-3" />
+          </div>
+        </motion.div>
       </div>
     </div>
   )
