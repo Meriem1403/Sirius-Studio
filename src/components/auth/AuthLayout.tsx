@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
-import AuthVisual from './AuthVisual'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -17,25 +16,14 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           Retour à l&apos;accueil
         </Link>
 
-        <div className="auth-shell">
-          <motion.aside
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="auth-visual-panel"
-          >
-            <AuthVisual />
-          </motion.aside>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="auth-form-panel"
-          >
-            {children}
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="auth-form-panel auth-form-panel--solo"
+        >
+          {children}
+        </motion.div>
       </div>
     </main>
   )
