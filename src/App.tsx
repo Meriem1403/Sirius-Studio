@@ -1,3 +1,4 @@
+import CosmicBackground from './components/CosmicBackground'
 import StarField from './components/StarField'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -10,18 +11,24 @@ import Footer from './components/Footer'
 
 export default function App() {
   return (
-    <div className="relative min-h-screen bg-[#050508]">
-      <StarField />
-      <Navbar />
-      <main>
-        <Hero />
-        <JourneyPaths />
-        <BeforeAfter />
-        <MockupBuilder />
-        <Services />
-        <Contact />
-      </main>
-      <Footer />
+    <div className="relative min-h-screen bg-[#030308]">
+      <div className="bg-layer">
+        <CosmicBackground />
+        <StarField />
+      </div>
+
+      <div className="foreground-layer">
+        <Navbar />
+        <main>
+          <Hero />
+          <JourneyPaths />
+          <BeforeAfter />
+          <MockupBuilder />
+          <Services />
+          <Contact />
+        </main>
+        <Footer />
+      </div>
     </div>
   )
 }

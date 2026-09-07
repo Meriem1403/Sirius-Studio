@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Check, Sparkles } from 'lucide-react'
+import { CtaIcon } from './icons'
 
 const buildSteps = [
   { label: 'Analyse', duration: 2000 },
@@ -28,8 +30,8 @@ export default function MockupBuilder() {
   }, [currentStep])
 
   return (
-    <section id="processus" className="relative py-32 px-6 overflow-hidden">
-      <div className="max-w-7xl mx-auto">
+    <section id="processus" className="section-wrap overflow-hidden">
+      <div className="section-inner">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -41,7 +43,7 @@ export default function MockupBuilder() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mt-4 mb-4">
             Votre maquette se construit
           </h2>
-          <p className="text-white/40 text-lg max-w-xl mx-auto">
+          <p className="text-white/40 text-lg xl:text-xl max-w-xl xl:max-w-2xl mx-auto">
             De votre idée à une expérience visuelle concrète — en quelques jours, gratuitement.
           </p>
         </motion.div>
@@ -64,9 +66,7 @@ export default function MockupBuilder() {
                   currentStep === i ? 'bg-indigo-500/20 border border-indigo-500/40' : 'bg-white/5 border border-white/10'
                 }`}>
                   {currentStep > i ? (
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 8l3 3 7-7" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <Check size={16} className="text-indigo-400" strokeWidth={2.5} />
                   ) : (
                     <span className="text-sm text-white/60">{i + 1}</span>
                   )}
@@ -92,8 +92,9 @@ export default function MockupBuilder() {
               transition={{ delay: 0.5 }}
               className="pt-4"
             >
-              <a href="#contact" className="btn-primary">
-                ✦ Lancer ma maquette gratuite
+              <a href="#contact" className="btn-primary inline-flex items-center gap-2">
+                <CtaIcon size={16} />
+                Lancer ma maquette gratuite
               </a>
             </motion.div>
           </div>
@@ -217,7 +218,10 @@ function MockupStage({ step, progress }: { step: number; progress: number }) {
 
   return (
     <div>
-      <p className="text-xs text-indigo-300/60 uppercase tracking-wider mb-4">Maquette finale ✦</p>
+      <p className="text-xs text-indigo-300/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+        Maquette finale
+        <Sparkles size={12} className="text-indigo-400" strokeWidth={2} />
+      </p>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="h-4 bg-indigo-400/40 rounded w-20 shimmer" />
