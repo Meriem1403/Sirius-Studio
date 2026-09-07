@@ -1,58 +1,156 @@
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Lock, Mail } from 'lucide-react'
+import { useState } from 'react'
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowRight, Lock, Mail } from 'lucide-react'
+import AuthLayout from '../components/auth/AuthLayout'
+import AuthField from '../components/auth/AuthField'
+import SocialAuthButtons from '../components/auth/SocialAuthButtons'
+import AuthFixturesPanel from '../components/auth/AuthFixturesPanel'
+import { useAuth } from '../context/AuthContext'
+
+function validateEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
 
 export default function LoginPage() {
-  return (
-    <main className="min-h-[100svh] flex items-center justify-center px-4 sm:px-6 pt-28 pb-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="auth-card w-full max-w-md p-6 sm:p-8"
-      >
-        <Link to="/" className="auth-back-link inline-flex items-center gap-2 text-sm mb-8">
-          <ArrowLeft size={16} strokeWidth={2} />
-          Retour à l&apos;accueil
-        </Link>
+  const { login, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as { from?: string } | null)?.from ?? '/espace-client'
 
-        <p className="text-xs uppercase tracking-[0.16em] text-indigo-300/75 mb-2">Espace client</p>
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
-          Se connecter
-        </h1>
-        <p className="text-sm text-white/45 mb-8">
-          Accédez à vos projets, maquettes et échanges avec l&apos;équipe Sirius.
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(false)
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({})
+  const [loading, setLoading] = useState(false)
+
+  if (isAuthenticated) {
+    return <Navigate to={from} replace />
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const next: typeof errors = {}
+
+    if (!email.trim()) next.email = 'Email requis'
+    else if (!validateEmail(email)) next.email = 'Email invalide'
+    if (!password) next.password = 'Mot de passe requis'
+
+    setErrors(next)
+    if (Object.keys(next).length) return
+
+    setLoading(true)
+    setErrors({})
+
+    try {
+      await login(email, password, remember)
+      navigate(from, { replace: true })
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : 'Connexion impossible.' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fillFixture = (fixtureEmail: string, fixturePassword: string) => {
+    setEmail(fixtureEmail)
+    setPassword(fixturePassword)
+    setErrors({})
+  }
+
+  return (
+    <AuthLayout>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <p className="auth-form-eyebrow">Connexion</p>
+        <h1 className="auth-form-title">Bon retour parmi nous</h1>
+        <p className="auth-form-subtitle">
+          Accédez à votre espace pour suivre vos projets Sirius.
         </p>
 
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <label className="auth-field block">
-            <span className="auth-label">Email</span>
-            <span className="auth-input-wrap">
-              <Mail size={16} className="auth-input-icon" strokeWidth={1.75} />
-              <input type="email" name="email" autoComplete="email" placeholder="vous@exemple.com" className="auth-input" />
-            </span>
-          </label>
+        <AuthFixturesPanel onSelect={fillFixture} />
 
-          <label className="auth-field block">
-            <span className="auth-label">Mot de passe</span>
-            <span className="auth-input-wrap">
-              <Lock size={16} className="auth-input-icon" strokeWidth={1.75} />
-              <input type="password" name="password" autoComplete="current-password" placeholder="••••••••" className="auth-input" />
-            </span>
-          </label>
+        <SocialAuthButtons mode="login" />
 
-          <button type="submit" className="btn-primary w-full mt-2">
-            Se connecter
+        <div className="auth-divider">
+          <span>ou avec votre email</span>
+        </div>
+
+        <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          <AnimatePresence>
+            {errors.form && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="auth-form-error"
+                role="alert"
+              >
+                {errors.form}
+              </motion.p>
+            )}
+          </AnimatePresence>
+
+          <AuthField
+            id="login-email"
+            label="Email"
+            type="email"
+            name="email"
+            icon={Mail}
+            autoComplete="email"
+            placeholder="marie@demo.sirius"
+            value={email}
+            onChange={setEmail}
+            error={errors.email}
+          />
+
+          <AuthField
+            id="login-password"
+            label="Mot de passe"
+            type="password"
+            name="password"
+            icon={Lock}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={setPassword}
+            error={errors.password}
+          />
+
+          <div className="auth-form-row">
+            <label className="auth-checkbox">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
+              <span className="auth-checkbox-box" />
+              <span>Se souvenir de moi</span>
+            </label>
+            <a href="#contact" className="auth-forgot-link">
+              Mot de passe oublié ?
+            </a>
+          </div>
+
+          <button type="submit" className="btn-primary auth-submit w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="auth-spinner auth-spinner--light" aria-hidden="true" />
+                Connexion en cours…
+              </>
+            ) : (
+              <>
+                Se connecter
+                <ArrowRight size={16} strokeWidth={2} />
+              </>
+            )}
           </button>
         </form>
 
-        <p className="text-center text-sm text-white/40 mt-6">
+        <p className="auth-switch">
           Pas encore de compte ?{' '}
-          <Link to="/inscription" className="text-indigo-300 hover:text-indigo-200 transition-colors">
-            S&apos;inscrire
-          </Link>
+          <Link to="/inscription">Créer un compte</Link>
         </p>
       </motion.div>
-    </main>
+    </AuthLayout>
   )
 }
