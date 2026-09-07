@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Mail, MapPin } from 'lucide-react'
 import Logo from './Logo'
-import { CtaIcon } from './icons'
 
 const navigation = [
   { label: 'Parcours', href: '#parcours' },
@@ -26,34 +25,7 @@ export default function Footer() {
     <footer className="footer relative z-10 mt-8 pb-6">
       <div className="footer-glow pointer-events-none" aria-hidden="true" />
 
-      <div className="section-inner relative px-4 sm:px-6 lg:px-8">
-        {/* CTA band */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.55 }}
-          className="footer-cta"
-        >
-          <div className="footer-cta-copy">
-            <p className="text-xs uppercase tracking-[0.16em] text-indigo-300/75 mb-2">
-              Prêt à démarrer ?
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
-              Votre prochain site commence ici.
-            </h2>
-            <p className="text-white/40 text-sm sm:text-base max-w-xl">
-              Décrivez votre projet et recevez une première maquette sous 48h, gratuitement.
-            </p>
-          </div>
-          <a href="#contact" className="btn-primary footer-cta-btn shrink-0 inline-flex items-center justify-center gap-2">
-            <CtaIcon size={16} />
-            Demander ma maquette
-            <ArrowUpRight size={15} strokeWidth={2} />
-          </a>
-        </motion.div>
-
-        {/* Main grid */}
+      <div className="section-inner relative px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12">
         <div className="footer-grid">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
