@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useId } from 'react'
 
 interface LogoProps {
@@ -18,8 +19,8 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
   const gradId = useId()
 
   return (
-    <a
-      href="#"
+    <Link
+      to="/"
       className={`group flex items-center ${s.gap} ${className}`}
       aria-label="Sirius Studio — Accueil"
     >
@@ -67,6 +68,6 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
           </span>
         </div>
       )}
-    </a>
+    </Link>
   )
 }
