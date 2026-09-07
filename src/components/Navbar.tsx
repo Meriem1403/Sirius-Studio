@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowUpRight, Menu, X } from 'lucide-react'
+import { ArrowUpRight, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
 import Logo from './Logo'
+import { useAuth } from '../context/AuthContext'
 
 const navLinks = [
   { label: 'Parcours', href: '#parcours' },
@@ -13,6 +14,67 @@ const navLinks = [
 
 const sectionIds = navLinks.map((l) => l.href.replace('#', ''))
 
+function NavUserActions({
+  compact = false,
+  stacked = false,
+  onNavigate,
+}: {
+  compact?: boolean
+  stacked?: boolean
+  onNavigate?: () => void
+}) {
+  const { user, logout } = useAuth()
+  if (!user) return null
+
+  const initials = user.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  if (stacked) {
+    return (
+      <div className="nav-user-group nav-user-group--stacked">
+        <Link to="/espace-client" onClick={onNavigate} className="nav-user-card">
+          <span className="nav-user-avatar">{initials}</span>
+          <span>
+            <span className="nav-user-name">{user.name}</span>
+            <span className="nav-user-email">{user.email}</span>
+          </span>
+        </Link>
+        <button type="button" className="nav-auth-btn nav-auth-btn--text" onClick={() => { logout(); onNavigate?.() }}>
+          Déconnexion
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`nav-user-group ${compact ? 'nav-user-group--compact' : ''}`}>
+      <Link
+        to="/espace-client"
+        onClick={onNavigate}
+        className="nav-user-chip"
+      >
+        <span className="nav-user-avatar nav-user-avatar--sm">{initials}</span>
+        <span className="nav-user-chip-label">
+          <LayoutDashboard size={14} strokeWidth={2} className="shrink-0" />
+          <span className={compact ? 'hidden sm:inline' : ''}>Espace client</span>
+        </span>
+      </Link>
+      <button
+        type="button"
+        className="nav-user-logout"
+        onClick={logout}
+        aria-label="Se déconnecter"
+      >
+        <LogOut size={15} strokeWidth={2} />
+      </button>
+    </div>
+  )
+}
+
 function NavAuthActions({
   compact = false,
   stacked = false,
@@ -22,31 +84,47 @@ function NavAuthActions({
   stacked?: boolean
   onNavigate?: () => void
 }) {
+  const { isAuthenticated } = useAuth()
   const location = useLocation()
   const isLogin = location.pathname === '/connexion'
   const isSignup = location.pathname === '/inscription'
 
+  if (isAuthenticated) {
+    return <NavUserActions compact={compact} stacked={stacked} onNavigate={onNavigate} />
+  }
+
   return (
-    <div className={`flex ${stacked ? 'flex-col gap-3 w-full' : 'items-center gap-2 sm:gap-3'}`}>
-      <Link
-        to="/connexion"
-        onClick={onNavigate}
-        className={`nav-auth-link ${compact && !stacked ? 'nav-auth-link--compact' : ''} ${
-          stacked ? 'nav-auth-link--stacked' : ''
-        } ${isLogin ? 'nav-auth-link--active' : ''}`}
-      >
-        <span className="sm:hidden">Connexion</span>
-        <span className="hidden sm:inline">Se connecter</span>
-      </Link>
+    <div
+      className={`nav-auth-group ${stacked ? 'nav-auth-group--stacked' : ''} ${
+        compact ? 'nav-auth-group--compact' : ''
+      }`}
+    >
+      {!stacked && (
+        <Link
+          to="/connexion"
+          onClick={onNavigate}
+          className={`nav-auth-btn nav-auth-btn--ghost ${isLogin ? 'nav-auth-btn--active' : ''}`}
+        >
+          Connexion
+        </Link>
+      )}
       <Link
         to="/inscription"
         onClick={onNavigate}
-        className={`nav-cta inline-flex items-center justify-center ${compact || stacked ? 'nav-cta--compact' : ''} ${
-          stacked ? 'w-full' : ''
-        } ${isSignup ? 'nav-cta--active' : ''}`}
+        className={`nav-auth-btn nav-auth-btn--primary ${isSignup ? 'nav-auth-btn--active' : ''}`}
       >
+        <span className="nav-auth-btn-shine" aria-hidden="true" />
         S&apos;inscrire
       </Link>
+      {stacked && (
+        <Link
+          to="/connexion"
+          onClick={onNavigate}
+          className={`nav-auth-btn nav-auth-btn--text ${isLogin ? 'nav-auth-btn--active' : ''}`}
+        >
+          Déjà un compte ? Se connecter
+        </Link>
+      )}
     </div>
   )
 }
