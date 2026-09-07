@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Code2, Layers, LayoutTemplate } from 'lucide-react'
 
 const blocks = [
   { delay: 0.3, h: 'h-3', w: 'w-2/3' },
@@ -28,9 +27,6 @@ export default function HeroVisual() {
           <div className="flex-1 mx-2 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center px-3">
             <span className="text-[10px] text-indigo-300/50">votre-projet.sirius.preview</span>
           </div>
-          <span className="hero-preview-badge text-[9px] uppercase tracking-wider px-2 py-1 rounded-md">
-            Live
-          </span>
         </div>
 
         {/* Mockup body */}
@@ -86,50 +82,6 @@ export default function HeroVisual() {
           </div>
         </div>
       </motion.div>
-
-      {/* Floating badges */}
-      <motion.div
-        initial={{ opacity: 0, x: -16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.8, duration: 0.6 }}
-        className="absolute -left-2 sm:-left-4 lg:-left-5 top-1/4 hero-float-badge px-3 py-2 rounded-xl text-[11px] sm:text-xs font-medium whitespace-nowrap"
-      >
-        Maquette en 48h
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: 16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 2, duration: 0.6 }}
-        className="absolute -right-2 sm:-right-3 lg:-right-4 bottom-1/4 hero-float-badge px-3 py-2 rounded-xl text-[11px] sm:text-xs font-medium whitespace-nowrap"
-      >
-        100% gratuit
-      </motion.div>
-    </div>
-  )
-}
-
-export function HeroExpertise() {
-  const items = [
-    { icon: LayoutTemplate, label: 'Sites web' },
-    { icon: Layers, label: 'Apps mobiles' },
-    { icon: Code2, label: 'Logiciels' },
-  ]
-
-  return (
-    <div className="flex flex-wrap gap-2 sm:gap-3">
-      {items.map(({ icon: Icon, label }, i) => (
-        <motion.div
-          key={label}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1 + i * 0.08 }}
-          className="hero-chip inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm text-white/50"
-        >
-          <Icon size={14} className="text-purple-400/80" strokeWidth={1.75} />
-          {label}
-        </motion.div>
-      ))}
     </div>
   )
 }

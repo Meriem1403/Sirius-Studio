@@ -177,12 +177,6 @@ body {
   text-transform: uppercase;
 }
 
-.hero-offer-card {
-  background: linear-gradient(135deg, rgba(12, 12, 24, 0.92) 0%, rgba(20, 16, 40, 0.88) 100%);
-  border: 1px solid rgba(165, 180, 252, 0.2);
-  box-shadow: 0 0 48px rgba(124, 127, 245, 0.1);
-}
-
 .hero-browser {
   background: rgba(8, 8, 16, 0.95);
   border: 1px solid rgba(165, 180, 252, 0.18);
@@ -190,26 +184,6 @@ body {
     0 24px 80px rgba(0, 0, 0, 0.45),
     0 0 70px rgba(124, 127, 245, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.hero-preview-badge {
-  color: rgba(129, 240, 180, 0.9);
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  font-weight: 600;
-}
-
-.hero-float-badge {
-  color: rgba(255, 255, 255, 0.9);
-  background: linear-gradient(135deg, rgba(14, 14, 28, 0.95) 0%, rgba(24, 18, 48, 0.92) 100%);
-  border: 1px solid rgba(165, 180, 252, 0.25);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 20px rgba(124, 127, 245, 0.12);
-}
-
-.hero-chip {
-  background: rgba(124, 127, 245, 0.06);
-  border: 1px solid rgba(165, 180, 252, 0.12);
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .glow-text {
@@ -929,39 +903,6 @@ body {
   background:
     radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 55%),
     linear-gradient(180deg, rgba(99, 102, 241, 0.04) 0%, transparent 40%);
-}
-
-.footer-cta {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  align-items: flex-start;
-  margin-bottom: 3rem;
-  padding: 1.75rem 1.5rem;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(165, 180, 252, 0.15);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(10, 10, 18, 0.6) 55%);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-}
-
-@media (min-width: 768px) {
-  .footer-cta {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2rem 2.25rem;
-    margin-bottom: 3.5rem;
-  }
-}
-
-.footer-cta-btn {
-  width: 100%;
-}
-
-@media (min-width: 768px) {
-  .footer-cta-btn {
-    width: auto;
-  }
 }
 
 .footer-grid {
