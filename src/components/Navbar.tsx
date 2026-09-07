@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import Logo from './Logo'
-import { CtaIcon } from './icons'
 
 const navLinks = [
   { label: 'Parcours', href: '#parcours' },
@@ -13,10 +13,50 @@ const navLinks = [
 
 const sectionIds = navLinks.map((l) => l.href.replace('#', ''))
 
+function NavAuthActions({
+  compact = false,
+  stacked = false,
+  onNavigate,
+}: {
+  compact?: boolean
+  stacked?: boolean
+  onNavigate?: () => void
+}) {
+  const location = useLocation()
+  const isLogin = location.pathname === '/connexion'
+  const isSignup = location.pathname === '/inscription'
+
+  return (
+    <div className={`flex ${stacked ? 'flex-col gap-3 w-full' : 'items-center gap-2 sm:gap-3'}`}>
+      <Link
+        to="/connexion"
+        onClick={onNavigate}
+        className={`nav-auth-link ${compact && !stacked ? 'nav-auth-link--compact' : ''} ${
+          stacked ? 'nav-auth-link--stacked' : ''
+        } ${isLogin ? 'nav-auth-link--active' : ''}`}
+      >
+        <span className="sm:hidden">Connexion</span>
+        <span className="hidden sm:inline">Se connecter</span>
+      </Link>
+      <Link
+        to="/inscription"
+        onClick={onNavigate}
+        className={`nav-cta inline-flex items-center justify-center ${compact || stacked ? 'nav-cta--compact' : ''} ${
+          stacked ? 'w-full' : ''
+        } ${isSignup ? 'nav-cta--active' : ''}`}
+      >
+        S&apos;inscrire
+      </Link>
+    </div>
+  )
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
+  const location = useLocation()
+  const isHome = location.pathname === '/'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -26,6 +66,8 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
+    if (!isHome) return
+
     const observers: IntersectionObserver[] = []
 
     sectionIds.forEach((id) => {
@@ -44,12 +86,16 @@ export default function Navbar() {
     })
 
     return () => observers.forEach((o) => o.disconnect())
-  }, [])
+  }, [isHome])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
@@ -66,63 +112,56 @@ export default function Navbar() {
             scrolled ? 'nav-shell--scrolled' : 'nav-shell--top'
           }`}
         >
-          <div className="flex items-center justify-between gap-4 px-4 sm:px-5 py-3 sm:py-3.5">
+          <div className="flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5">
             <Logo size="md" />
 
-            {/* Desktop & large tablet */}
-            <div className="hidden lg:flex items-center justify-center flex-1 px-6">
-              <div className="nav-pill flex items-center gap-1 p-1">
-                {navLinks.map((link) => {
-                  const isActive = activeSection === link.href.replace('#', '')
-                  return (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      className={`nav-pill-link relative px-4 py-2 text-sm rounded-full transition-colors duration-400 ${
-                        isActive ? 'text-white' : 'text-white/45 hover:text-white/80'
-                      }`}
-                    >
-                      {isActive && (
-                        <motion.span
-                          layoutId="navActive"
-                          className="absolute inset-0 rounded-full nav-pill-active"
-                          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                        />
-                      )}
-                      <span className="relative z-[1]">{link.label}</span>
-                    </a>
-                  )
-                })}
+            {/* Desktop navigation */}
+            {isHome && (
+              <div className="hidden lg:flex items-center justify-center flex-1 px-6">
+                <div className="nav-pill flex items-center gap-1 p-1">
+                  {navLinks.map((link) => {
+                    const isActive = activeSection === link.href.replace('#', '')
+                    return (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        className={`nav-pill-link relative px-4 py-2 text-sm rounded-full transition-colors duration-400 ${
+                          isActive ? 'text-white' : 'text-white/45 hover:text-white/80'
+                        }`}
+                      >
+                        {isActive && (
+                          <motion.span
+                            layoutId="navActive"
+                            className="absolute inset-0 rounded-full nav-pill-active"
+                            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                          />
+                        )}
+                        <span className="relative z-[1]">{link.label}</span>
+                      </a>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* CTA desktop */}
+            {/* Desktop auth */}
             <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
-              <a href="#contact" className="nav-cta inline-flex items-center gap-2 text-sm">
-                <CtaIcon size={14} />
-                Ma maquette gratuite
-              </a>
+              <NavAuthActions />
             </div>
 
-            {/* Tablet CTA compact */}
-            <a
-              href="#contact"
-              className="hidden md:inline-flex lg:hidden nav-cta nav-cta--compact items-center gap-1.5 text-xs flex-shrink-0"
-            >
-              <CtaIcon size={12} />
-              Ma maquette
-            </a>
-
-            {/* Mobile / small tablet menu button */}
-            <button
-              type="button"
-              className="lg:hidden nav-menu-btn flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0"
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-              aria-expanded={mobileOpen}
-            >
-              {mobileOpen ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
-            </button>
+            {/* Mobile & tablet auth + menu */}
+            <div className="flex lg:hidden items-center gap-2 sm:gap-3 flex-shrink-0">
+              <NavAuthActions compact />
+              <button
+                type="button"
+                className="nav-menu-btn flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0"
+                onClick={() => setMobileOpen((v) => !v)}
+                aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+                aria-expanded={mobileOpen}
+              >
+                {mobileOpen ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
+              </button>
+            </div>
           </div>
         </nav>
       </motion.header>
@@ -158,43 +197,38 @@ export default function Navbar() {
                 </p>
               </div>
 
-              <div className="px-4 py-6 flex flex-col gap-1">
-                {navLinks.map((link, i) => {
-                  const isActive = activeSection === link.href.replace('#', '')
-                  return (
-                    <motion.a
-                      key={link.href}
-                      href={link.href}
-                      onClick={closeMobile}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.05 + i * 0.06, duration: 0.35 }}
-                      className={`mobile-nav-link flex items-center justify-between px-4 py-3.5 rounded-xl text-base ${
-                        isActive ? 'mobile-nav-link--active' : ''
-                      }`}
-                    >
-                      <span>{link.label}</span>
-                      <ArrowUpRight size={16} className={isActive ? 'text-indigo-300' : 'text-white/20'} />
-                    </motion.a>
-                  )
-                })}
-              </div>
+              {isHome && (
+                <div className="px-4 py-6 flex flex-col gap-1">
+                  {navLinks.map((link, i) => {
+                    const isActive = activeSection === link.href.replace('#', '')
+                    return (
+                      <motion.a
+                        key={link.href}
+                        href={link.href}
+                        onClick={closeMobile}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 + i * 0.06, duration: 0.35 }}
+                        className={`mobile-nav-link flex items-center justify-between px-4 py-3.5 rounded-xl text-base ${
+                          isActive ? 'mobile-nav-link--active' : ''
+                        }`}
+                      >
+                        <span>{link.label}</span>
+                        <ArrowUpRight size={16} className={isActive ? 'text-indigo-300' : 'text-white/20'} />
+                      </motion.a>
+                    )
+                  })}
+                </div>
+              )}
 
-              <div className="px-6 pb-8 pt-2">
-                <motion.a
-                  href="#contact"
-                  onClick={closeMobile}
+              <div className={`px-6 pb-8 ${isHome ? 'pt-2' : 'pt-8'}`}>
+                <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="nav-cta w-full justify-center py-3.5 text-base"
+                  transition={{ delay: isHome ? 0.3 : 0.1 }}
                 >
-                  <CtaIcon size={16} />
-                  Demander ma maquette gratuite
-                </motion.a>
-                <p className="text-center text-xs text-white/25 mt-4">
-                  Gratuit · Sans engagement · Réponse sous 48h
-                </p>
+                  <NavAuthActions stacked onNavigate={closeMobile} />
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
