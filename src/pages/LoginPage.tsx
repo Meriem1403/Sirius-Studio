@@ -7,16 +7,18 @@ import AuthField from '../components/auth/AuthField'
 import SocialAuthButtons from '../components/auth/SocialAuthButtons'
 import AuthFixturesPanel from '../components/auth/AuthFixturesPanel'
 import { useAuth } from '../context/AuthContext'
+import { getSession } from '../lib/auth/authService'
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth()
+  const { login, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/espace-client'
+  const from = (location.state as { from?: string } | null)?.from
+  const defaultDest = user?.role === 'admin' ? '/espace-admin' : '/espace-client'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,7 +27,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   if (isAuthenticated) {
-    return <Navigate to={from} replace />
+    return <Navigate to={from ?? defaultDest} replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,7 +46,9 @@ export default function LoginPage() {
 
     try {
       await login(email, password, remember)
-      navigate(from, { replace: true })
+      const session = getSession()
+      const dest = from ?? (session?.user.role === 'admin' ? '/espace-admin' : '/espace-client')
+      navigate(dest, { replace: true })
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : 'Connexion impossible.' })
     } finally {
