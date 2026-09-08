@@ -26,6 +26,9 @@ function NavUserActions({
   const { user, logout } = useAuth()
   if (!user) return null
 
+  const spaceHref = user.role === 'admin' ? '/espace-admin' : '/espace-client'
+  const spaceLabel = user.role === 'admin' ? 'Administration' : 'Espace client'
+
   const initials = user.name
     .split(' ')
     .map((n) => n[0])
@@ -36,7 +39,7 @@ function NavUserActions({
   if (stacked) {
     return (
       <div className="nav-user-group nav-user-group--stacked">
-        <Link to="/espace-client" onClick={onNavigate} className="nav-user-card">
+        <Link to={spaceHref} onClick={onNavigate} className="nav-user-card">
           <span className="nav-user-avatar">{initials}</span>
           <span>
             <span className="nav-user-name">{user.name}</span>
@@ -53,14 +56,14 @@ function NavUserActions({
   return (
     <div className={`nav-user-group ${compact ? 'nav-user-group--compact' : ''}`}>
       <Link
-        to="/espace-client"
+        to={spaceHref}
         onClick={onNavigate}
         className="nav-user-chip"
       >
         <span className="nav-user-avatar nav-user-avatar--sm">{initials}</span>
         <span className="nav-user-chip-label">
           <LayoutDashboard size={14} strokeWidth={2} className="shrink-0" />
-          <span className={compact ? 'hidden sm:inline' : ''}>Espace client</span>
+          <span className={compact ? 'hidden sm:inline' : ''}>{spaceLabel}</span>
         </span>
       </Link>
       <button

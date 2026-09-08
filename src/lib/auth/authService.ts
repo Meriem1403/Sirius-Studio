@@ -1,5 +1,6 @@
 import { FIXTURE_ACCOUNTS, getFixtureByEmail } from '../../fixtures/users'
 import type { RegisterInput, Session, User } from './types'
+import { updateProfile, defaultNotificationPrefs } from '../data/store'
 
 const SESSION_KEY = 'sirius_session'
 const REGISTERED_KEY = 'sirius_registered_users'
@@ -125,6 +126,10 @@ export async function registerAccount(input: RegisterInput): Promise<User> {
   saveRegistered(registered)
 
   const user = toPublicUser(newUser)
+  updateProfile(user.id, {
+    phone: input.phone?.trim(),
+    notificationPrefs: defaultNotificationPrefs(),
+  })
   saveSession(user, true)
   return user
 }
