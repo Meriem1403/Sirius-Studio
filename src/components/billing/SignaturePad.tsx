@@ -20,17 +20,26 @@ export default function SignaturePad({ onChange, disabled }: SignaturePadProps) 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ratio = window.devicePixelRatio || 1
-    const rect = canvas.getBoundingClientRect()
-    canvas.width = rect.width * ratio
-    canvas.height = rect.height * ratio
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.scale(ratio, ratio)
-    ctx.strokeStyle = '#e2e8f0'
-    ctx.lineWidth = 2
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
+
+    function resize() {
+      if (!canvas) return
+      const ratio = window.devicePixelRatio || 1
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = rect.width * ratio
+      canvas.height = rect.height * ratio
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 2
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+    }
+
+    resize()
+    const observer = new ResizeObserver(resize)
+    observer.observe(canvas)
+    return () => observer.disconnect()
   }, [])
 
   function pos(e: React.MouseEvent | React.TouchEvent) {
