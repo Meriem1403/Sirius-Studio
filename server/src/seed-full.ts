@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pool, uid } from './db.js'
 import { hashPassword } from './services/auth.js'
-import { writeCollection } from './workspace/state.js'
+import { readCollection, writeCollection } from './workspace/state.js'
 import { syncProjectsTable } from './workspace/projectsSync.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -15,6 +15,7 @@ type SeedPayload = {
   profiles: unknown[]
   deliveries: unknown[]
   documentRequests: unknown[]
+  documents: unknown[]
   quotes: unknown[]
   invoices: unknown[]
   payments: unknown[]
@@ -60,6 +61,7 @@ export async function seedIfEmpty() {
     'profiles',
     'deliveries',
     'documentRequests',
+    'documents',
     'quotes',
     'invoices',
     'payments',
@@ -115,4 +117,19 @@ export async function seedIfEmpty() {
   }
 
   console.info('[seed] Workspace complet chargé (fixtures).')
+}
+
+/** Remplit la collection documents si absente (bases déjà initialisées avant l’ajout documents). */
+export async function ensureWorkspaceDocuments() {
+  const existing = (await readCollection('documents')) as unknown[]
+  if (Array.isArray(existing) && existing.length > 0) return
+
+  const seedPath = path.join(__dirname, '../fixtures/workspace-seed.json')
+  if (!fs.existsSync(seedPath)) return
+
+  const data = JSON.parse(fs.readFileSync(seedPath, 'utf8')) as SeedPayload
+  if (!data.documents?.length) return
+
+  await writeCollection('documents', data.documents)
+  console.info('[seed] Collection documents initialisée.')
 }

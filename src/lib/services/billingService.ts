@@ -18,6 +18,7 @@ import { computeTotals, newLineItem } from '../billing/calc'
 import {
   appendAccountingEntries,
   appendActivity,
+  flushWorkspacePersist,
   getAccountingEntries,
   getInvoices,
   getPayments,
@@ -32,6 +33,8 @@ import {
   uid,
 } from '../data/store'
 import { FIXTURE_ACCOUNTS } from '../../fixtures/users'
+
+export { flushWorkspacePersist }
 import { notifyAdmins, notifyUser } from './notificationService'
 
 function getProjectById(projectId: string) {
@@ -39,7 +42,22 @@ function getProjectById(projectId: string) {
 }
 
 function getClientAccount(userId: string) {
-  return FIXTURE_ACCOUNTS.find((a) => a.id === userId)
+  const fixture = FIXTURE_ACCOUNTS.find((a) => a.id === userId)
+  if (fixture) return fixture
+
+  const project = getProjects().find((p) => p.userId === userId)
+  const quote = getQuotes().find((q) => q.userId === userId)
+  const invoice = getInvoices().find((i) => i.userId === userId)
+  const name = quote?.clientName ?? invoice?.clientName
+  if (!name && !project) return null
+
+  return {
+    id: userId,
+    email: '',
+    name: name ?? 'Client',
+    company: quote?.clientCompany ?? invoice?.clientCompany,
+    role: 'client' as const,
+  }
 }
 
 function nextNumber(prefix: 'DEV' | 'FAC', items: { number: string }[]) {

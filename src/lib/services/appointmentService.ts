@@ -7,7 +7,7 @@ import {
   saveAppointments,
   uid,
 } from '../data/store'
-import { FIXTURE_ACCOUNTS } from '../../fixtures/users'
+import { getClientAccount } from './projectService'
 import { notifyUser } from './notificationService'
 
 export function getAllAppointments() {
@@ -49,7 +49,7 @@ export function createAppointment(input: {
     return null
   }
 
-  const client = FIXTURE_ACCOUNTS.find((a) => a.id === input.userId)
+  const client = getClientAccount(input.userId)
   const project = input.projectId
     ? getProjects().find((p) => p.id === input.projectId)
     : undefined

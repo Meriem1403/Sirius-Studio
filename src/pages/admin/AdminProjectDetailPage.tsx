@@ -21,6 +21,7 @@ import { getMessagesForProject } from '../../lib/services/messageService'
 import { getDeliveriesForUser } from '../../lib/services/notificationService'
 import {
   createQuoteFromProject,
+  flushWorkspacePersist,
   formatMoney,
   getInvoicesForProject,
   getQuotesForProject,
@@ -57,22 +58,27 @@ export default function AdminProjectDetailPage() {
   const projectInvoices = getInvoicesForProject(id)
   const currentUrl = url || project.mockupUrl || ''
 
-  function handleSaveUrl(e: React.FormEvent) {
+  async function handleSaveUrl(e: React.FormEvent) {
     e.preventDefault()
     if (!currentUrl.trim()) return
     setMockupUrl(id!, currentUrl.trim())
+    await flushWorkspacePersist()
     setSaved(true)
     refresh()
     setTimeout(() => setSaved(false), 2000)
   }
 
-  function handlePublish() {
+  async function handlePublish() {
     if (!currentUrl.trim() || !user) return
     setPublishing(true)
-    setMockupUrl(id!, currentUrl.trim())
-    publishMockup(id!, user)
-    setPublishing(false)
-    refresh()
+    try {
+      setMockupUrl(id!, currentUrl.trim())
+      publishMockup(id!, user)
+      await flushWorkspacePersist()
+      refresh()
+    } finally {
+      setPublishing(false)
+    }
   }
 
   return (

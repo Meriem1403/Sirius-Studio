@@ -9,6 +9,7 @@ const COLLECTION_KEYS = [
   'profiles',
   'deliveries',
   'documentRequests',
+  'documents',
   'quotes',
   'invoices',
   'payments',
@@ -124,6 +125,7 @@ export async function loadWorkspaceState(user: AuthUser) {
   const profiles = filterByUserIdField(collections.profiles as { userId: string }[], user, 'userId')
   const deliveries = filterForUser(collections.deliveries as { userId: string }[], user)
   const documentRequests = filterForUser(collections.documentRequests as { userId: string }[], user)
+  const documents = filterForUser(collections.documents as { userId: string }[], user)
   const quotes = filterForUser(collections.quotes as { userId: string }[], user)
   const invoices = filterForUser(collections.invoices as { userId: string; id: string }[], user)
   const payments = (collections.payments as { invoiceId: string }[]).filter((p) => {
@@ -141,6 +143,7 @@ export async function loadWorkspaceState(user: AuthUser) {
     profiles,
     deliveries,
     documentRequests,
+    documents,
     prospects: user.role === 'admin' ? prospectRows.map(mapProspect) : [],
     quotes,
     invoices,
@@ -168,6 +171,7 @@ export async function saveWorkspaceCollection(key: CollectionKey, data: unknown,
     'invoices',
     'payments',
     'documentRequests',
+    'documents',
     'notifications',
     'activities',
   ]

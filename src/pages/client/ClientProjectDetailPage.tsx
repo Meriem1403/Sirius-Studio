@@ -7,10 +7,9 @@ import {
   getActivitiesForProject,
 } from '../../lib/services/projectService'
 import { getMessagesForProject } from '../../lib/services/messageService'
-import { getDocumentsForProject } from '../../fixtures/documents'
 import StatusBadge from '../../components/client/StatusBadge'
 import MockupValidationPanel from '../../components/client/MockupValidationPanel'
-import { DOCUMENT_KIND_LABELS } from '../../fixtures/documents'
+import { DOCUMENT_KIND_LABELS, getDocumentsForProject, openDocumentDownload } from '../../lib/services/documentService'
 import { formatDate, formatDateTime } from '../../lib/client/format'
 
 export default function ClientProjectDetailPage() {
@@ -142,7 +141,7 @@ export default function ClientProjectDetailPage() {
                     {DOCUMENT_KIND_LABELS[d.kind]} · {d.size} · {formatDate(d.date)}
                   </p>
                 </div>
-                <button type="button" className="client-doc-btn" disabled>
+                <button type="button" className="client-doc-btn" onClick={() => openDocumentDownload(d)}>
                   Télécharger
                 </button>
               </li>

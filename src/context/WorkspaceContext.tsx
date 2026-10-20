@@ -7,6 +7,7 @@ import type {
   ClientActivity,
   ClientMessage,
   ClientProject,
+  ClientDocument,
   DocumentRequest,
   Invoice,
   NotificationDelivery,
@@ -26,6 +27,7 @@ import {
   getProjects,
   getDeliveries,
   getDocumentRequests,
+  getDocuments,
   getProspects,
   getQuotes,
   getInvoices,
@@ -44,6 +46,7 @@ interface WorkspaceContextValue {
   profiles: UserProfile[]
   deliveries: NotificationDelivery[]
   documentRequests: DocumentRequest[]
+  documents: ClientDocument[]
   prospects: Prospect[]
   quotes: Quote[]
   invoices: Invoice[]
@@ -68,10 +71,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const handler = () => refresh()
+    const handler = () => setTick((t) => t + 1)
     window.addEventListener(STORE_EVENT, handler)
     return () => window.removeEventListener(STORE_EVENT, handler)
-  }, [refresh])
+  }, [])
 
   const value = useMemo<WorkspaceContextValue>(
     () => ({
@@ -82,6 +85,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       profiles: getProfiles(),
       deliveries: getDeliveries(),
       documentRequests: getDocumentRequests(),
+      documents: getDocuments(),
       prospects: getProspects(),
       quotes: getQuotes(),
       invoices: getInvoices(),

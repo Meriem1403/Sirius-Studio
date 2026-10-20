@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import DocumentRequestCard from '../../components/workspace/DocumentRequestCard'
-import { getDocumentsForUser, DOCUMENT_KIND_LABELS } from '../../fixtures/documents'
+import { DOCUMENT_KIND_LABELS, getDocumentsForUser, openDocumentDownload } from '../../lib/services/documentService'
 import { getRequestsForUser } from '../../lib/services/documentRequestService'
 import EmptyState from '../../components/client/EmptyState'
 import { formatDate } from '../../lib/client/format'
@@ -85,7 +85,11 @@ export default function ClientDocumentsPage() {
                       {DOCUMENT_KIND_LABELS[d.kind]} · {d.size} · {formatDate(d.date)}
                     </p>
                   </div>
-                  <button type="button" className="client-doc-btn" disabled>
+                  <button
+                    type="button"
+                    className="client-doc-btn"
+                    onClick={() => openDocumentDownload(d)}
+                  >
                     Télécharger
                   </button>
                 </li>

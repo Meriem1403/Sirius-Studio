@@ -19,6 +19,7 @@ import {
   recordPayment,
   signInvoice,
   signQuote,
+  flushWorkspacePersist,
 } from '../../lib/services/billingService'
 import { formatDate, formatDateTime } from '../../lib/client/format'
 import type { PaymentMethod } from '../../lib/auth/types'
@@ -53,13 +54,14 @@ export default function ClientBillingPage() {
     setSearchParams({})
   }
 
-  function handleSignQuote() {
+  async function handleSignQuote() {
     if (!selectedQuote || !signatureData || !user) return
     signQuote(selectedQuote.id, {
       signedAt: new Date().toISOString(),
       signedBy: user.name,
       signatureDataUrl: signatureData,
     })
+    await flushWorkspacePersist()
     refresh()
     setSignatureData(null)
     const updated = getQuoteById(selectedQuote.id)
@@ -71,13 +73,14 @@ export default function ClientBillingPage() {
     }
   }
 
-  function handleSignInvoice() {
+  async function handleSignInvoice() {
     if (!selectedInvoice || !signatureData || !user) return
     signInvoice(selectedInvoice.id, {
       signedAt: new Date().toISOString(),
       signedBy: user.name,
       signatureDataUrl: signatureData,
     })
+    await flushWorkspacePersist()
     refresh()
     setSignatureData(null)
   }
@@ -88,15 +91,18 @@ export default function ClientBillingPage() {
     if (remaining <= 0) return
     setPaying(true)
     setTimeout(() => {
-      recordPayment({
-        invoiceId: selectedInvoice.id,
-        amount: remaining,
-        method: payMethod,
-        cardLast4: payMethod === 'card' ? cardNumber.slice(-4) || '4242' : undefined,
-      })
-      setPaying(false)
-      refresh()
-      closeDetail()
+      void (async () => {
+        recordPayment({
+          invoiceId: selectedInvoice.id,
+          amount: remaining,
+          method: payMethod,
+          cardLast4: payMethod === 'card' ? cardNumber.slice(-4) || '4242' : undefined,
+        })
+        await flushWorkspacePersist()
+        setPaying(false)
+        refresh()
+        closeDetail()
+      })()
     }, 1200)
   }
 

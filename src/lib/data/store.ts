@@ -5,6 +5,7 @@ import type {
   ClientActivity,
   ClientMessage,
   ClientProject,
+  ClientDocument,
   DocumentRequest,
   Invoice,
   NotificationDelivery,
@@ -29,7 +30,13 @@ import {
   FIXTURE_REFUNDS,
 } from '../../fixtures/billing'
 import { isApiMode } from '../api/config'
-import { getWorkspaceCache, patchWorkspaceCache, pushWorkspaceCollection } from '../api/workspaceSync'
+import {
+  enqueueWorkspacePersist,
+  flushWorkspacePersist,
+  getWorkspaceCache,
+  patchWorkspaceCache,
+} from '../api/workspaceSync'
+import { FIXTURE_DOCUMENTS } from '../../fixtures/documents'
 
 const KEYS = {
   projects: 'sirius_store_projects',
@@ -39,6 +46,7 @@ const KEYS = {
   profiles: 'sirius_store_profiles',
   deliveries: 'sirius_store_deliveries',
   documentRequests: 'sirius_store_document_requests',
+  documents: 'sirius_store_documents',
   prospects: 'sirius_store_prospects',
   quotes: 'sirius_store_quotes',
   invoices: 'sirius_store_invoices',
@@ -59,6 +67,7 @@ type StoreSlice =
   | 'profiles'
   | 'deliveries'
   | 'documentRequests'
+  | 'documents'
   | 'prospects'
   | 'quotes'
   | 'invoices'
@@ -112,6 +121,7 @@ function ensureInitialized() {
   write(KEYS.profiles, FIXTURE_PROFILES)
   write(KEYS.deliveries, [])
   write(KEYS.documentRequests, FIXTURE_DOCUMENT_REQUESTS)
+  write(KEYS.documents, FIXTURE_DOCUMENTS)
   write(KEYS.prospects, FIXTURE_PROSPECTS)
   write(KEYS.quotes, FIXTURE_QUOTES)
   write(KEYS.invoices, FIXTURE_INVOICES)
@@ -126,15 +136,17 @@ function ensureInitialized() {
 ensureInitialized()
 
 function persistCollection(
-  key: Parameters<typeof pushWorkspaceCollection>[0],
+  key: Parameters<typeof enqueueWorkspacePersist>[0],
   data: unknown,
   slice: StoreSlice,
   optimistic?: Partial<WorkspaceState>,
 ) {
   if (optimistic) patchWorkspaceCache(optimistic)
-  void pushWorkspaceCollection(key, data)
   emitChange(slice)
+  void enqueueWorkspacePersist(key, data)
 }
+
+export { flushWorkspacePersist }
 
 type WorkspaceState = NonNullable<ReturnType<typeof getWorkspaceCache>>
 
@@ -312,6 +324,21 @@ export function saveDocumentRequests(requests: DocumentRequest[]) {
   }
   write(KEYS.documentRequests, requests)
   emitChange('documentRequests')
+}
+
+export function getDocuments(): ClientDocument[] {
+  if (isApiMode()) return getWorkspaceCache()?.documents ?? []
+  ensureInitialized()
+  return read<ClientDocument[]>(KEYS.documents, FIXTURE_DOCUMENTS)
+}
+
+export function saveDocuments(documents: ClientDocument[]) {
+  if (isApiMode()) {
+    persistCollection('documents', documents, 'documents', { documents })
+    return
+  }
+  write(KEYS.documents, documents)
+  emitChange('documents')
 }
 
 export function getProspects(): Prospect[] {

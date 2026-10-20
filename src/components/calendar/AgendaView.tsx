@@ -10,6 +10,7 @@ import {
 import { getAllProjects, getClientAccount } from '../../lib/services/projectService'
 import { downloadIcs, openGoogleCalendar } from '../../lib/calendar/export'
 import { formatDateTime } from '../../lib/client/format'
+import { flushWorkspacePersist } from '../../lib/data/store'
 
 interface AgendaViewProps {
   user: User
@@ -76,7 +77,7 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
 
   const selected = selectedId ? appointments.find((a) => a.id === selectedId) : null
 
-  function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     if (!form.title || !form.startAt || !form.endAt) return
     if (isAdmin && !form.userId) {
@@ -100,6 +101,7 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
       return
     }
     setFormError(null)
+    await flushWorkspacePersist()
     onChange?.()
     setSelectedId(appt.id)
     setShowForm(false)
@@ -281,7 +283,18 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
                 <Download size={14} /> Apple / Mac (.ics)
               </button>
               {isAdmin && (
-                <button type="button" className="btn-secondary" onClick={() => { deleteAppointment(selected.id); setSelectedId(null); onChange?.() }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    void (async () => {
+                      deleteAppointment(selected.id)
+                      await flushWorkspacePersist()
+                      setSelectedId(null)
+                      onChange?.()
+                    })()
+                  }}
+                >
                   <Trash2 size={14} /> Supprimer
                 </button>
               )}

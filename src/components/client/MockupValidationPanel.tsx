@@ -11,6 +11,7 @@ import {
   isFinalChoice,
 } from '../../lib/client/validation'
 import { useWorkspace } from '../../context/WorkspaceContext'
+import { flushWorkspacePersist } from '../../lib/data/store'
 
 type Step = 'main' | 'satisfied' | 'revision' | 'reject'
 
@@ -31,17 +32,21 @@ export default function MockupValidationPanel({ project }: MockupValidationPanel
   const validationChoice = project.validation?.choice ?? 'pending'
   const submitted = isFinalChoice(validationChoice)
 
-  function handleSubmit(choice: MockupClientChoice) {
+  async function handleSubmit(choice: MockupClientChoice) {
     if (!user || submitting) return
     setSubmitting(true)
-    submitMockupValidation({
-      projectId: project.id,
-      client: user,
-      choice,
-      feedback,
-    })
-    setSubmitting(false)
-    refresh()
+    try {
+      submitMockupValidation({
+        projectId: project.id,
+        client: user,
+        choice,
+        feedback,
+      })
+      await flushWorkspacePersist()
+      refresh()
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {

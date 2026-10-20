@@ -3,6 +3,7 @@ import type {
   Appointment,
   AppNotification,
   ClientActivity,
+  ClientDocument,
   ClientMessage,
   ClientProject,
   DocumentRequest,
@@ -26,6 +27,7 @@ export interface WorkspaceState {
   profiles: UserProfile[]
   deliveries: NotificationDelivery[]
   documentRequests: DocumentRequest[]
+  documents: ClientDocument[]
   prospects: Prospect[]
   quotes: Quote[]
   invoices: Invoice[]
@@ -59,6 +61,7 @@ export function emptyState(): WorkspaceState {
     profiles: [],
     deliveries: [],
     documentRequests: [],
+    documents: [],
     prospects: [],
     quotes: [],
     invoices: [],
@@ -86,6 +89,7 @@ export type WorkspaceCollectionKey =
   | 'profiles'
   | 'deliveries'
   | 'documentRequests'
+  | 'documents'
   | 'quotes'
   | 'invoices'
   | 'payments'
@@ -93,11 +97,29 @@ export type WorkspaceCollectionKey =
   | 'accounting'
   | 'appointments'
 
-export async function pushWorkspaceCollection(key: WorkspaceCollectionKey, data: unknown) {
-  if (!isApiMode()) return
-  cache = await apiFetch<WorkspaceState>(`/workspace/${key}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
+let persistChain: Promise<void> = Promise.resolve()
+
+/** Attendre la fin de toutes les écritures workspace en cours (mode API). */
+export function flushWorkspacePersist(): Promise<void> {
+  return persistChain
+}
+
+export function enqueueWorkspacePersist(key: WorkspaceCollectionKey, data: unknown): Promise<void> {
+  if (!isApiMode()) return Promise.resolve()
+  const run = persistChain.then(async () => {
+    cache = await apiFetch<WorkspaceState>(`/workspace/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+    window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: { slice: key } }))
   })
-  window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: { slice: key } }))
+  persistChain = run.catch(async (err) => {
+    console.error('[workspace] persist failed', key, err)
+    await syncWorkspace()
+  })
+  return run
+}
+
+export async function pushWorkspaceCollection(key: WorkspaceCollectionKey, data: unknown) {
+  await enqueueWorkspacePersist(key, data)
 }

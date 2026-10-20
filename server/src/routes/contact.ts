@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { pool, uid } from '../db.js'
 import { notifyAdminNewLead } from '../services/email.js'
+import { pushAdminNotification } from '../services/adminNotify.js'
 
 const contactSchema = z.object({
   name: z.string().min(2),
@@ -26,15 +27,7 @@ contactRoutes.post('/', async (c) => {
   const prospectId = uid('prospect')
   const leadId = uid('lead')
   const company = data.company?.trim() || 'Particulier / non renseigné'
-  const notes = [
-    data.message?.trim(),
-    data.situation ? `Situation : ${data.situation}` : '',
-    data.needs.length ? `Besoins : ${data.needs.join(', ')}` : '',
-    data.objectives.length ? `Objectifs : ${data.objectives.join(', ')}` : '',
-    data.website ? `Site actuel : ${data.website}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n')
+  const notes = data.message?.trim() || null
 
   await pool.query(
     `INSERT INTO prospects (id, name, company, email, phone, sector, source, status, score, notes)
@@ -48,12 +41,27 @@ contactRoutes.post('/', async (c) => {
     JSON.stringify(data),
   ])
 
+  const emailSummary = [
+    data.message?.trim(),
+    data.needs.length ? `Besoins : ${data.needs.join(', ')}` : '',
+    data.objectives.length ? `Objectifs : ${data.objectives.join(', ')}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
   await notifyAdminNewLead({
     name: data.name,
     email: data.email,
     company,
     phone: data.phone,
-    message: notes,
+    message: emailSummary || 'Nouvelle demande via le site.',
+  })
+
+  await pushAdminNotification({
+    type: 'status',
+    title: `Nouveau lead · ${data.name.trim()}`,
+    body: `${company}${data.phone ? ` · ${data.phone.trim()}` : ''}`,
+    link: '/espace-admin/prospection',
   })
 
   return c.json({ ok: true, prospectId }, 201)

@@ -2,7 +2,9 @@ import type { MockupClientChoice, User } from '../auth/types'
 import {
   appendActivity,
   getActivities,
+  getInvoices,
   getProjects,
+  getQuotes,
   updateProject,
   uid,
 } from '../data/store'
@@ -170,7 +172,22 @@ export function submitMockupValidation(input: {
 }
 
 export function getClientAccount(userId: string) {
-  return FIXTURE_ACCOUNTS.find((a) => a.id === userId)
+  const fixture = FIXTURE_ACCOUNTS.find((a) => a.id === userId)
+  if (fixture) return fixture
+
+  const project = getProjects().find((p) => p.userId === userId)
+  const quote = getQuotes().find((q) => q.userId === userId)
+  const invoice = getInvoices().find((i) => i.userId === userId)
+  const name = quote?.clientName ?? invoice?.clientName
+  if (!name && !project) return undefined
+
+  return {
+    id: userId,
+    email: '',
+    name: name ?? 'Client',
+    company: quote?.clientCompany ?? invoice?.clientCompany,
+    role: 'client' as const,
+  }
 }
 
 export function countPendingValidations() {

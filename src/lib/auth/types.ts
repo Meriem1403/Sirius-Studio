@@ -137,6 +137,17 @@ export interface DocumentRequest {
 export type ProspectSource = 'auto' | 'manual'
 export type ProspectStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
 
+export interface ContactLeadPayload {
+  situation?: 'existing' | 'idea' | 'unknown'
+  website?: string
+  needs?: string[]
+  objectives?: string[]
+  message?: string
+  siret?: string
+  phone?: string
+  company?: string
+}
+
 export interface Prospect {
   id: string
   name: string
@@ -148,6 +159,7 @@ export interface Prospect {
   status: ProspectStatus
   score: number
   notes?: string
+  lead?: ContactLeadPayload
   createdAt: string
   lastContactAt?: string
   convertedUserId?: string

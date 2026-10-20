@@ -42,6 +42,7 @@ import {
   sendQuote,
   updateInvoice,
   updateQuote,
+  flushWorkspacePersist,
 } from '../../lib/services/billingService'
 import { formatDate, formatDateTime } from '../../lib/client/format'
 import type { BillingLineItem } from '../../lib/auth/types'
@@ -80,6 +81,24 @@ export default function AdminBillingPage() {
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null)
   const [newProjectId, setNewProjectId] = useState('')
   const [editLines, setEditLines] = useState<BillingLineItem[] | null>(null)
+  const [billingBusy, setBillingBusy] = useState(false)
+  const [billingFeedback, setBillingFeedback] = useState<string | null>(null)
+
+  async function runBillingAction(fn: () => void, successMessage?: string) {
+    setBillingFeedback(null)
+    setBillingBusy(true)
+    try {
+      fn()
+      await flushWorkspacePersist()
+      if (successMessage) setBillingFeedback(successMessage)
+      setEditLines(null)
+      refresh()
+    } catch {
+      setBillingFeedback('Enregistrement impossible. Réessayez ou reconnectez-vous.')
+    } finally {
+      setBillingBusy(false)
+    }
+  }
 
   const tab = (searchParams.get('tab') as Tab) || 'overview'
   const selectedQuoteId = searchParams.get('quote')
@@ -140,13 +159,21 @@ export default function AdminBillingPage() {
     setEditLines(null)
   }
 
-  function handleCreateQuote() {
+  async function handleCreateQuote() {
     const projectId = newProjectId || selectedProjectId
     if (!projectId) return
-    const quote = createQuoteFromProject(projectId)
-    if (quote) {
+    setBillingBusy(true)
+    try {
+      const quote = createQuoteFromProject(projectId)
+      if (!quote) {
+        setBillingFeedback('Impossible de créer le devis pour ce projet.')
+        return
+      }
+      await flushWorkspacePersist()
       refresh()
       openQuote(quote.id)
+    } finally {
+      setBillingBusy(false)
     }
   }
 
@@ -258,18 +285,54 @@ export default function AdminBillingPage() {
             />
           )}
 
+          {billingFeedback && (
+            <p className="client-message-hint mt-2" role="status">{billingFeedback}</p>
+          )}
+
           {selectedQuote && selectedQuote.status !== 'converted' && (
             <div className="billing-action-row">
-              <button type="button" className="btn-secondary" onClick={() => { if (selectedQuote && activeLines) { updateQuote(selectedQuote.id, { lines: activeLines }); refresh(); setEditLines(null) } }}>Enregistrer</button>
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={billingBusy || !activeLines}
+                onClick={() => void runBillingAction(() => updateQuote(selectedQuote.id, { lines: activeLines! }), 'Devis enregistré.')}
+              >
+                Enregistrer
+              </button>
               {selectedQuote.status === 'draft' && (
-                <button type="button" className="btn-primary" onClick={() => { sendQuote(selectedQuote.id); refresh() }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={billingBusy}
+                  onClick={() => void runBillingAction(() => sendQuote(selectedQuote.id), 'Devis envoyé au client.')}
+                >
                   <Send size={14} /> Envoyer
                 </button>
               )}
               {['sent', 'signed'].includes(selectedQuote.status) && !selectedQuote.depositInvoiceId && (
                 <>
-                  <button type="button" className="btn-secondary" onClick={() => { const inv = convertQuoteToInvoice(selectedQuote.id, { isDeposit: true, depositPercent: 30 }); if (inv) { refresh(); openInvoice(inv.id) } }}>Acompte 30 %</button>
-                  <button type="button" className="btn-primary" onClick={() => { const inv = convertQuoteToInvoice(selectedQuote.id); if (inv) { refresh(); openInvoice(inv.id) } }}>Convertir en facture</button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={billingBusy}
+                    onClick={() => void runBillingAction(() => {
+                      const inv = convertQuoteToInvoice(selectedQuote.id, { isDeposit: true, depositPercent: 30 })
+                      if (inv) openInvoice(inv.id)
+                    })}
+                  >
+                    Acompte 30 %
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={billingBusy}
+                    onClick={() => void runBillingAction(() => {
+                      const inv = convertQuoteToInvoice(selectedQuote.id)
+                      if (inv) openInvoice(inv.id)
+                    })}
+                  >
+                    Convertir en facture
+                  </button>
                 </>
               )}
               {selectedQuote.depositInvoiceId && (
@@ -285,9 +348,21 @@ export default function AdminBillingPage() {
 
           {selectedInvoice && selectedInvoice.status !== 'paid' && (
             <div className="billing-action-row">
-              <button type="button" className="btn-secondary" onClick={() => { if (activeLines) { updateInvoice(selectedInvoice.id, { lines: activeLines }); refresh(); setEditLines(null) } }}>Enregistrer</button>
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={billingBusy || !activeLines}
+                onClick={() => void runBillingAction(() => updateInvoice(selectedInvoice.id, { lines: activeLines! }), 'Facture enregistrée.')}
+              >
+                Enregistrer
+              </button>
               {selectedInvoice.status === 'draft' && (
-                <button type="button" className="btn-primary" onClick={() => { sendInvoice(selectedInvoice.id); refresh() }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={billingBusy}
+                  onClick={() => void runBillingAction(() => sendInvoice(selectedInvoice.id), 'Facture émise.')}
+                >
                   <Send size={14} /> Émettre
                 </button>
               )}
@@ -306,7 +381,12 @@ export default function AdminBillingPage() {
 
           {selectedInvoice?.phase === 'balance' && selectedInvoice.status === 'draft' && selectedInvoice.quoteId && (
             <div className="billing-action-row">
-              <button type="button" className="btn-primary" onClick={() => { releaseBalanceInvoice(selectedInvoice.quoteId!); refresh() }}>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={billingBusy}
+                onClick={() => void runBillingAction(() => releaseBalanceInvoice(selectedInvoice.quoteId!), 'Solde émis.')}
+              >
                 Émettre le solde au client (livraison)
               </button>
             </div>
@@ -347,16 +427,23 @@ export default function AdminBillingPage() {
               </div>
               <div className="billing-action-row">
                 <button type="button" className="btn-secondary" onClick={() => setSelectedPaymentId(null)}>Annuler</button>
-                <button type="button" className="btn-primary" onClick={() => {
-                  const amount = parseFloat(refundAmount)
-                  if (amount && refundReason.trim()) {
-                    processRefund({ paymentId: selectedPaymentId, amount, reason: refundReason, admin: user })
-                    refresh()
-                    setSelectedPaymentId(null)
-                    setRefundReason('')
-                    setRefundAmount('')
-                  }
-                }}>Confirmer</button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={billingBusy}
+                  onClick={() => {
+                    const amount = parseFloat(refundAmount)
+                    if (!amount || !refundReason.trim()) return
+                    void runBillingAction(() => {
+                      processRefund({ paymentId: selectedPaymentId, amount, reason: refundReason, admin: user })
+                      setSelectedPaymentId(null)
+                      setRefundReason('')
+                      setRefundAmount('')
+                    }, 'Remboursement enregistré.')
+                  }}
+                >
+                  Confirmer
+                </button>
               </div>
             </div>
           )}

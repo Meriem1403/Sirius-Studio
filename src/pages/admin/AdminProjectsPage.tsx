@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
-import { getAllProjects, getClientAccount } from '../../lib/services/projectService'
-import { PROJECT_STATUS_LABELS } from '../../fixtures/projects'
+import { useWorkspace } from '../../context/WorkspaceContext'
+import { getClientAccount } from '../../lib/services/projectService'
 import { MOCKUP_CHOICE_LABELS } from '../../lib/client/validation'
 import StatusBadge from '../../components/client/StatusBadge'
 
 export default function AdminProjectsPage() {
-  const projects = getAllProjects().filter((p) => p.userId !== 'fixture-admin-1')
+  const { projects: workspaceProjects } = useWorkspace()
+  const projects = workspaceProjects.filter((p) => p.userId !== 'fixture-admin-1')
 
   return (
     <>
@@ -27,14 +28,22 @@ export default function AdminProjectsPage() {
             <li key={p.id}>
               <Link to={`/espace-admin/projets/${p.id}`} className="admin-project-card">
                 <div className="admin-project-card-top">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="client-project-title">{p.title}</h3>
-                    <p className="client-project-type">{client?.name}{client?.company ? ` · ${client.company}` : ''}</p>
+                    <p className="client-project-type">
+                      {client?.name}
+                      {client?.company ? ` · ${client.company}` : ''}
+                      {' · '}
+                      {p.type}
+                    </p>
                   </div>
-                  <StatusBadge status={p.status} />
+                  <StatusBadge status={p.status} compact />
                 </div>
+                <p className="admin-project-card-progress">
+                  <span className="admin-project-card-progress-pct">{p.progress} %</span>
+                  <span className="admin-project-card-progress-step">{p.nextStep}</span>
+                </p>
                 <div className="admin-project-card-meta">
-                  <span>{PROJECT_STATUS_LABELS[p.status]}</span>
                   {p.mockupUrl && (
                     <span className="admin-mockup-chip">
                       <ExternalLink size={12} /> Maquette liée

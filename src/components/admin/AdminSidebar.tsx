@@ -16,6 +16,7 @@ import { countBillingActions } from '../../lib/services/billingService'
 import { countUnreadMessagesForAdmin } from '../../lib/services/messageService'
 import { countUnreadNotifications } from '../../lib/services/notificationService'
 import { countPendingValidations } from '../../lib/services/projectService'
+import { isApiMode } from '../../lib/api/config'
 import { prospectStats } from '../../lib/services/prospectService'
 import { userInitials } from '../../lib/client/format'
 
@@ -32,13 +33,15 @@ const navMain = [
 
 export default function AdminSidebar() {
   const { user, logout } = useAuth()
-  const { appointments } = useWorkspace()
+  const { appointments, prospects } = useWorkspace()
   if (!user) return null
 
   const unreadMsg = countUnreadMessagesForAdmin()
   const unreadNotif = countUnreadNotifications(user.id)
   const pending = countPendingValidations()
-  const newProspects = prospectStats().new
+  const newProspects = isApiMode()
+    ? prospects.filter((p) => p.status === 'new').length
+    : prospectStats().new
   const billingActions = countBillingActions()
   const upcomingAgenda = appointments.filter((a) => new Date(a.startAt).getTime() >= Date.now()).length
 

@@ -3,6 +3,19 @@ import { z } from 'zod'
 import { pool, uid } from '../db.js'
 import { requireAdmin } from '../middleware/auth.js'
 
+function parseLeadPayload(raw: unknown) {
+  if (!raw || typeof raw !== 'object') return undefined
+  const p = raw as Record<string, unknown>
+  return {
+    situation: p.situation as 'existing' | 'idea' | 'unknown' | undefined,
+    website: (p.website as string | undefined) ?? undefined,
+    needs: Array.isArray(p.needs) ? (p.needs as string[]) : undefined,
+    objectives: Array.isArray(p.objectives) ? (p.objectives as string[]) : undefined,
+    message: (p.message as string | undefined) ?? undefined,
+    siret: (p.siret as string | undefined) ?? undefined,
+  }
+}
+
 function mapProspect(row: Record<string, unknown>) {
   return {
     id: row.id as string,
@@ -15,6 +28,7 @@ function mapProspect(row: Record<string, unknown>) {
     status: row.status as string,
     score: row.score as number,
     notes: (row.notes as string | null) ?? undefined,
+    lead: parseLeadPayload(row.lead_payload),
     createdAt: (row.created_at as Date).toISOString(),
     lastContactAt: row.last_contact_at ? (row.last_contact_at as Date).toISOString() : undefined,
     convertedUserId: (row.converted_user_id as string | null) ?? undefined,
@@ -26,7 +40,12 @@ export const prospectRoutes = new Hono()
 prospectRoutes.use('*', requireAdmin)
 
 prospectRoutes.get('/', async (c) => {
-  const { rows } = await pool.query(`SELECT * FROM prospects ORDER BY created_at DESC`)
+  const { rows } = await pool.query(
+    `SELECT p.*, cl.payload AS lead_payload
+     FROM prospects p
+     LEFT JOIN contact_leads cl ON cl.prospect_id = p.id
+     ORDER BY p.created_at DESC`,
+  )
   return c.json({ prospects: rows.map(mapProspect) })
 })
 
@@ -85,7 +104,13 @@ prospectRoutes.patch('/:id', async (c) => {
 
   values.push(id)
   await pool.query(`UPDATE prospects SET ${fields.join(', ')}, last_contact_at = NOW() WHERE id = $${i}`, values)
-  const { rows } = await pool.query(`SELECT * FROM prospects WHERE id = $1`, [id])
+  const { rows } = await pool.query(
+    `SELECT p.*, cl.payload AS lead_payload
+     FROM prospects p
+     LEFT JOIN contact_leads cl ON cl.prospect_id = p.id
+     WHERE p.id = $1`,
+    [id],
+  )
   if (!rows[0]) return c.json({ error: 'Prospect introuvable.' }, 404)
   return c.json({ prospect: mapProspect(rows[0]) })
 })
