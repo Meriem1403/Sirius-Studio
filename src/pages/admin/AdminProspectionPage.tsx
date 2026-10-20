@@ -13,10 +13,12 @@ import type { Prospect, ProspectStatus } from '../../lib/auth/types'
 import { isApiMode } from '../../lib/api/config'
 import { createProspectApi, fetchProspects, updateProspectApi } from '../../lib/api/prospects'
 import { syncWorkspace } from '../../lib/api/workspaceSync'
+import { useWorkspace } from '../../context/WorkspaceContext'
 
 type Tab = 'all' | 'auto' | 'manual'
 
 export default function AdminProspectionPage() {
+  const { projects } = useWorkspace()
   const [tab, setTab] = useState<Tab>('all')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', sector: '', notes: '' })
@@ -180,7 +182,17 @@ export default function AdminProspectionPage() {
       ) : (
         <ul className="prospect-list">
           {filtered.map((p) => (
-            <ProspectCard key={p.id} prospect={p} busy={busyId === p.id} onStatusChange={handleStatus} />
+            <ProspectCard
+              key={p.id}
+              prospect={p}
+              busy={busyId === p.id}
+              linkedProjectId={projects.find((pr) => pr.userId === p.convertedUserId)?.id}
+              onStatusChange={handleStatus}
+              onConverted={() => {
+                reload()
+                if (isApiMode()) void syncWorkspace()
+              }}
+            />
           ))}
         </ul>
       )}

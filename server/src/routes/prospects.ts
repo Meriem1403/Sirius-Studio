@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { pool, uid } from '../db.js'
 import { requireAdmin } from '../middleware/auth.js'
+import { convertProspectToClient } from '../services/prospectConvert.js'
+import { pushAdminNotification } from '../services/adminNotify.js'
 
 function parseLeadPayload(raw: unknown) {
   if (!raw || typeof raw !== 'object') return undefined
@@ -78,6 +80,40 @@ prospectRoutes.post('/', async (c) => {
   )
   const { rows } = await pool.query(`SELECT * FROM prospects WHERE id = $1`, [id])
   return c.json({ prospect: mapProspect(rows[0]) }, 201)
+})
+
+const convertSchema = z.object({
+  projectTitle: z.string().min(2),
+  projectType: z.string().min(1).default('Site web'),
+})
+
+prospectRoutes.post('/:id/convert', async (c) => {
+  const id = c.req.param('id')
+  const body = convertSchema.safeParse(await c.req.json())
+  if (!body.success) return c.json({ error: 'Données invalides.' }, 400)
+
+  try {
+    const result = await convertProspectToClient(id, body.data)
+    await pushAdminNotification({
+      type: 'status',
+      title: `Client activé · ${result.name}`,
+      body: `Projet « ${body.data.projectTitle} » prêt dans Projets clients.`,
+      link: `/espace-admin/projets/${result.projectId}`,
+    })
+    const { rows } = await pool.query(
+      `SELECT p.*, cl.payload AS lead_payload
+       FROM prospects p
+       LEFT JOIN contact_leads cl ON cl.prospect_id = p.id
+       WHERE p.id = $1`,
+      [id],
+    )
+    return c.json({ ...result, prospect: mapProspect(rows[0]) })
+  } catch (e) {
+    if (e instanceof Error && e.message === 'NOT_FOUND') {
+      return c.json({ error: 'Prospect introuvable.' }, 404)
+    }
+    throw e
+  }
 })
 
 prospectRoutes.patch('/:id', async (c) => {

@@ -28,3 +28,21 @@ export async function updateProspectApi(id: string, patch: Partial<Pick<Prospect
   })
   return data.prospect
 }
+
+export async function convertProspectApi(
+  id: string,
+  input: { projectTitle: string; projectType: string },
+) {
+  return apiFetch<{
+    userId: string
+    projectId: string
+    tempPassword?: string
+    email: string
+    name: string
+    createdAccount: boolean
+    prospect: Prospect
+  }>(`/prospects/${id}/convert`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}

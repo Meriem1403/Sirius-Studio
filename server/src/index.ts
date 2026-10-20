@@ -10,6 +10,7 @@ import { authRoutes } from './routes/auth.js'
 import { contactRoutes } from './routes/contact.js'
 import { messageRoutes } from './routes/messages.js'
 import { prospectRoutes } from './routes/prospects.js'
+import { clientRoutes } from './routes/clients.js'
 
 const app = new Hono()
 
@@ -28,6 +29,7 @@ app.route('/auth', authRoutes)
 app.route('/contact', contactRoutes)
 app.route('/messages', messageRoutes)
 app.route('/prospects', prospectRoutes)
+app.route('/clients', clientRoutes)
 app.route('/workspace', workspaceRoutes)
 
 async function main() {

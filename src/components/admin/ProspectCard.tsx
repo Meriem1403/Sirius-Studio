@@ -1,22 +1,74 @@
 import { useState } from 'react'
-import { Check, Copy, Mail, Phone, MessageSquare } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarPlus, Check, Copy, FolderKanban, Mail, Phone, MessageSquare, UserPlus } from 'lucide-react'
 import type { Prospect, ProspectStatus } from '../../lib/auth/types'
 import { PROSPECT_SOURCE_LABELS, PROSPECT_STATUS_LABELS } from '../../fixtures/prospects'
 import { formatDateTime } from '../../lib/client/format'
 import { formatPhoneForTel, resolveLeadDisplay } from '../../lib/prospects/leadDisplay'
+import { isApiMode } from '../../lib/api/config'
+import { convertProspectApi } from '../../lib/api/prospects'
 
 const STATUS_FLOW: ProspectStatus[] = ['new', 'contacted', 'qualified', 'converted', 'lost']
 
 interface ProspectCardProps {
   prospect: Prospect
   busy?: boolean
+  linkedProjectId?: string
   onStatusChange: (id: string, status: ProspectStatus) => void | Promise<void>
+  onConverted?: () => void
 }
 
-export default function ProspectCard({ prospect, busy, onStatusChange }: ProspectCardProps) {
+export default function ProspectCard({ prospect, busy, linkedProjectId, onStatusChange, onConverted }: ProspectCardProps) {
   const [copied, setCopied] = useState<'email' | 'phone' | null>(null)
+  const [showConvert, setShowConvert] = useState(false)
+  const [convertBusy, setConvertBusy] = useState(false)
+  const [convertError, setConvertError] = useState<string | null>(null)
+  const [convertResult, setConvertResult] = useState<{
+    tempPassword?: string
+    email: string
+    projectId: string
+    userId: string
+  } | null>(null)
   const lead = resolveLeadDisplay(prospect)
+  const defaultProjectTitle = lead?.needs[0] ? `Projet ${lead.needs[0]}` : `Projet ${prospect.company}`
+  const [projectTitle, setProjectTitle] = useState(defaultProjectTitle)
+  const [projectType, setProjectType] = useState(lead?.needs[0] ?? 'Site web')
   const phone = prospect.phone?.trim()
+  const isClient = Boolean(prospect.convertedUserId || prospect.status === 'converted')
+
+  async function handleConvert(e: React.FormEvent) {
+    e.preventDefault()
+    if (!isApiMode()) {
+      setConvertError('Disponible uniquement avec l’API (production).')
+      return
+    }
+    setConvertBusy(true)
+    setConvertError(null)
+    try {
+      const result = await convertProspectApi(prospect.id, {
+        projectTitle: projectTitle.trim(),
+        projectType: projectType.trim() || 'Site web',
+      })
+      setConvertResult({
+        tempPassword: result.tempPassword,
+        email: result.email,
+        projectId: result.projectId,
+        userId: result.userId,
+      })
+      onConverted?.()
+    } catch {
+      setConvertError('Conversion impossible. Vérifiez que l’email n’est pas déjà utilisé autrement.')
+    } finally {
+      setConvertBusy(false)
+    }
+  }
+
+  const activeUserId = prospect.convertedUserId ?? convertResult?.userId
+  const activeProjectId = linkedProjectId ?? convertResult?.projectId
+  const planifierHref =
+    activeUserId && activeProjectId
+      ? `/espace-admin/agenda?planifier=1&userId=${activeUserId}&projectId=${activeProjectId}&title=${encodeURIComponent(`RDV — ${prospect.name}`)}`
+      : null
 
   async function copy(value: string, kind: 'email' | 'phone') {
     try {
@@ -148,6 +200,61 @@ export default function ProspectCard({ prospect, busy, onStatusChange }: Prospec
 
       {!lead && prospect.notes && (
         <p className="prospect-notes">{prospect.notes}</p>
+      )}
+
+      <div className="prospect-workflow-actions">
+        {!isClient && !showConvert && (
+          <button type="button" className="btn-primary prospect-workflow-btn" disabled={busy || convertBusy} onClick={() => setShowConvert(true)}>
+            <UserPlus size={14} /> Créer compte client + projet
+          </button>
+        )}
+        {activeProjectId && (isClient || convertResult) && (
+          <Link to={`/espace-admin/projets/${activeProjectId}`} className="btn-secondary prospect-workflow-btn">
+            <FolderKanban size={14} /> Ouvrir le projet
+          </Link>
+        )}
+        {(isClient || convertResult) && planifierHref && (
+          <Link to={planifierHref} className="btn-secondary prospect-workflow-btn">
+            <CalendarPlus size={14} /> Planifier un RDV
+          </Link>
+        )}
+      </div>
+
+      {showConvert && !isClient && (
+        <form className="prospect-convert-panel" onSubmit={handleConvert}>
+          <p className="prospect-actions-label">Conversion en client Sirius</p>
+          <p className="client-message-hint mb-2">
+            Crée le compte (email du prospect), un projet dans « Projets clients », et passe le statut à Converti.
+          </p>
+          {convertError && <p className="client-alert-desc text-red-300">{convertError}</p>}
+          {convertResult ? (
+            <div className="prospect-convert-success">
+              <p className="client-message-hint">Compte prêt pour <strong>{convertResult.email}</strong></p>
+              {convertResult.tempPassword && (
+                <p className="prospect-temp-password">
+                  Mot de passe temporaire à communiquer au client :{' '}
+                  <code>{convertResult.tempPassword}</code>
+                </p>
+              )}
+              <button type="button" className="btn-secondary mt-2" onClick={() => setShowConvert(false)}>Fermer</button>
+            </div>
+          ) : (
+            <>
+              <label className="billing-field block">
+                <span className="billing-field-label">Titre du projet</span>
+                <input className="admin-input" value={projectTitle} onChange={(e) => setProjectTitle(e.target.value)} required />
+              </label>
+              <label className="billing-field block mt-2">
+                <span className="billing-field-label">Type</span>
+                <input className="admin-input" value={projectType} onChange={(e) => setProjectType(e.target.value)} required />
+              </label>
+              <div className="billing-action-row mt-3">
+                <button type="button" className="btn-secondary" onClick={() => setShowConvert(false)}>Annuler</button>
+                <button type="submit" className="btn-primary" disabled={convertBusy}>{convertBusy ? 'Création…' : 'Confirmer'}</button>
+              </div>
+            </>
+          )}
+        </form>
       )}
 
       <div className="prospect-actions">

@@ -4398,6 +4398,39 @@ select.client-input {
   cursor: default;
 }
 
+.prospect-workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.prospect-workflow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.prospect-convert-panel {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.prospect-temp-password code {
+  font-size: 0.8125rem;
+  color: rgba(251, 191, 36, 0.95);
+}
+
+.agenda-calendar-hint {
+  margin-top: 0.75rem;
+  padding: 0 0.25rem;
+}
+
 .prospect-name {
   font-size: 0.9375rem;
   font-weight: 600;

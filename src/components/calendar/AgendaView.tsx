@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CalendarPlus, ChevronLeft, ChevronRight, Download, ExternalLink, Trash2 } from 'lucide-react'
 import type { Appointment, User } from '../../lib/auth/types'
 import { useWorkspace } from '../../context/WorkspaceContext'
@@ -11,30 +11,67 @@ import { getAllProjects, getClientAccount } from '../../lib/services/projectServ
 import { downloadIcs, openGoogleCalendar } from '../../lib/calendar/export'
 import { formatDateTime } from '../../lib/client/format'
 import { flushWorkspacePersist } from '../../lib/data/store'
+import { isApiMode } from '../../lib/api/config'
+import { fetchClients, type ClientAccount } from '../../lib/api/clients'
+import {
+  defaultAppointmentEndLocal,
+  defaultAppointmentStartLocal,
+  localDatetimeToIso,
+} from '../../lib/calendar/formDefaults'
+
+export interface AgendaPlanPrefill {
+  userId?: string
+  projectId?: string
+  openForm?: boolean
+  title?: string
+}
 
 interface AgendaViewProps {
   user: User
   isAdmin?: boolean
   onChange?: () => void
+  planPrefill?: AgendaPlanPrefill
 }
 
-export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps) {
-  const { appointments: allAppointments } = useWorkspace()
+export default function AgendaView({ user, isAdmin, onChange, planPrefill }: AgendaViewProps) {
+  const { appointments: allAppointments, projects: workspaceProjects } = useWorkspace()
+  const [apiClients, setApiClients] = useState<ClientAccount[]>([])
   const [monthOffset, setMonthOffset] = useState(0)
-  const [showForm, setShowForm] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [form, setForm] = useState({
-    title: '',
+    title: planPrefill?.title ?? '',
     description: '',
-    startAt: '',
-    endAt: '',
-    userId: '',
-    projectId: '',
+    startAt: defaultAppointmentStartLocal(),
+    endAt: defaultAppointmentEndLocal(),
+    userId: planPrefill?.userId ?? '',
+    projectId: planPrefill?.projectId ?? '',
     location: 'Visio',
     meetingUrl: '',
-    type: 'review' as Appointment['type'],
+    type: 'discovery' as Appointment['type'],
   })
+  const [showForm, setShowForm] = useState(Boolean(planPrefill?.openForm))
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!isAdmin || !isApiMode()) return
+    fetchClients()
+      .then(setApiClients)
+      .catch(() => setApiClients([]))
+  }, [isAdmin])
+
+  useEffect(() => {
+    if (!planPrefill) return
+    if (planPrefill.userId || planPrefill.projectId || planPrefill.title) {
+      setForm((f) => ({
+        ...f,
+        userId: planPrefill.userId ?? f.userId,
+        projectId: planPrefill.projectId ?? f.projectId,
+        title: planPrefill.title ?? f.title,
+      }))
+    }
+    if (planPrefill.openForm) setShowForm(true)
+  }, [planPrefill])
 
   const appointments = useMemo(() => {
     const list = isAdmin
@@ -44,12 +81,17 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
       (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
     )
   }, [allAppointments, isAdmin, user.id])
-  const projects = getAllProjects().filter((p) => p.userId !== 'fixture-admin-1')
-  const clients = projects.reduce<{ id: string; name: string }[]>((acc, p) => {
-    const c = getClientAccount(p.userId)
-    if (c && !acc.some((x) => x.id === c.id)) acc.push({ id: c.id, name: c.name })
-    return acc
-  }, [])
+  const projects = isApiMode() ? workspaceProjects.filter((p) => p.userId !== 'fixture-admin-1') : getAllProjects().filter((p) => p.userId !== 'fixture-admin-1')
+  const clients = useMemo(() => {
+    if (isApiMode() && apiClients.length > 0) {
+      return apiClients.map((c) => ({ id: c.id, name: c.company ? `${c.name} · ${c.company}` : c.name }))
+    }
+    return projects.reduce<{ id: string; name: string }[]>((acc, p) => {
+      const c = getClientAccount(p.userId)
+      if (c && !acc.some((x) => x.id === c.id)) acc.push({ id: c.id, name: c.name })
+      return acc
+    }, [])
+  }, [apiClients, projects])
 
   const viewDate = useMemo(() => {
     const d = new Date()
@@ -81,42 +123,55 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
     e.preventDefault()
     if (!form.title || !form.startAt || !form.endAt) return
     if (isAdmin && !form.userId) {
-      setFormError('Sélectionnez un client.')
+      setFormError('Sélectionnez un client (convertissez d’abord le prospect si besoin).')
       return
     }
-    const appt = createAppointment({
-      title: form.title,
-      description: form.description,
-      startAt: new Date(form.startAt).toISOString(),
-      endAt: new Date(form.endAt).toISOString(),
-      userId: isAdmin ? form.userId : user.id,
-      projectId: form.projectId || undefined,
-      location: form.location,
-      meetingUrl: form.meetingUrl,
-      type: form.type,
-      createdBy: user.id,
-    })
-    if (!appt) {
-      setFormError('La date de fin doit être postérieure à la date de début.')
-      return
-    }
+    setSaving(true)
     setFormError(null)
-    await flushWorkspacePersist()
-    onChange?.()
-    setSelectedId(appt.id)
-    setShowForm(false)
-    setForm({
-      title: '',
-      description: '',
-      startAt: '',
-      endAt: '',
-      userId: '',
-      projectId: '',
-      location: 'Visio',
-      meetingUrl: '',
-      type: 'review',
-    })
+    try {
+      const clientLabel = clients.find((c) => c.id === form.userId)?.name
+      const appt = createAppointment({
+        title: form.title,
+        description: form.description,
+        startAt: localDatetimeToIso(form.startAt),
+        endAt: localDatetimeToIso(form.endAt),
+        userId: isAdmin ? form.userId : user.id,
+        projectId: form.projectId || undefined,
+        location: form.location,
+        meetingUrl: form.meetingUrl,
+        type: form.type,
+        createdBy: user.id,
+        clientName: clientLabel?.split(' · ')[0],
+      })
+      if (!appt) {
+        setFormError('La date de fin doit être postérieure à la date de début.')
+        return
+      }
+      await flushWorkspacePersist()
+      onChange?.()
+      setSelectedId(appt.id)
+      setShowForm(false)
+      const start = defaultAppointmentStartLocal()
+      setForm({
+        title: '',
+        description: '',
+        startAt: start,
+        endAt: defaultAppointmentEndLocal(start),
+        userId: '',
+        projectId: '',
+        location: 'Visio',
+        meetingUrl: '',
+        type: 'discovery',
+      })
+    } catch {
+      setFormError('Enregistrement impossible. Réessayez.')
+    } finally {
+      setSaving(false)
+    }
   }
+
+  const eventsThisMonth = apptsByDay.size
+  const upcomingCount = appointments.filter((a) => new Date(a.endAt).getTime() >= Date.now()).length
 
   return (
     <div className="agenda-layout">
@@ -165,6 +220,13 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
             )
           })}
         </div>
+        {eventsThisMonth === 0 && (
+          <p className="agenda-calendar-hint client-message-hint">
+            {upcomingCount > 0
+              ? 'Aucun RDV sur ce mois — changez de mois avec les flèches ou consultez la liste à droite.'
+              : 'Aucun RDV planifié — créez-en un avec le bouton « Nouveau rendez-vous ».'}
+          </p>
+        )}
       </div>
 
       <aside className="agenda-side">
@@ -184,12 +246,20 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
             </label>
             <label className="billing-field">
               <span className="billing-field-label">Client</span>
-              <select className="admin-input" value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })} required>
+              <select
+                className="admin-input"
+                value={form.userId}
+                onChange={(e) => setForm({ ...form, userId: e.target.value, projectId: '' })}
+                required
+              >
                 <option value="">Choisir…</option>
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
+              {clients.length === 0 && (
+                <span className="client-message-hint">Aucun compte client — convertissez un prospect en client d’abord.</span>
+              )}
             </label>
             <label className="billing-field">
               <span className="billing-field-label">Projet</span>
@@ -232,7 +302,7 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
             </label>
             <div className="billing-action-row">
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Annuler</button>
-              <button type="submit" className="btn-primary">Enregistrer</button>
+              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
             </div>
           </form>
         )}

@@ -198,8 +198,15 @@ export async function saveWorkspaceCollection(key: CollectionKey, data: unknown,
 
 export async function upsertAppointments(items: unknown[], user: AuthUser) {
   if (user.role !== 'admin') throw new Error('FORBIDDEN')
-  await writeCollection('appointments', items)
-  for (const raw of items as Record<string, unknown>[]) {
+  const list = Array.isArray(items) ? (items as Record<string, unknown>[]) : []
+  await writeCollection('appointments', list)
+  const ids = list.map((i) => String(i.id))
+  if (ids.length === 0) {
+    await pool.query(`DELETE FROM appointments`)
+  } else {
+    await pool.query(`DELETE FROM appointments WHERE NOT (id = ANY($1::text[]))`, [ids])
+  }
+  for (const raw of list) {
     await pool.query(
       `INSERT INTO appointments (id, title, description, start_at, end_at, user_id, client_name, project_id, project_title, created_by, location, meeting_url, type)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)

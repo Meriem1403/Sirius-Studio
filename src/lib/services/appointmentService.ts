@@ -42,6 +42,7 @@ export function createAppointment(input: {
   meetingUrl?: string
   type: Appointment['type']
   createdBy: string
+  clientName?: string
 }) {
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)
@@ -61,7 +62,7 @@ export function createAppointment(input: {
     startAt: input.startAt,
     endAt: input.endAt,
     userId: input.userId,
-    clientName: client?.name ?? 'Client',
+    clientName: input.clientName?.trim() || client?.name || 'Client',
     projectId: input.projectId,
     projectTitle: project?.title,
     createdBy: input.createdBy,
