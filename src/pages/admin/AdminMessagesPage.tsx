@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MessageSquare } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useWorkspace } from '../../context/WorkspaceContext'
 import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
@@ -16,27 +15,49 @@ import {
 } from '../../lib/services/messageService'
 import { getAllProjects } from '../../lib/services/projectService'
 import EmptyState from '../../components/client/EmptyState'
-import type { MessageAttachment } from '../../lib/auth/types'
+import type { ClientMessage, ClientProject, MessageAttachment } from '../../lib/auth/types'
+import { isApiMode } from '../../lib/api/config'
+import { fetchApiProjects, fetchMessages, markApiMessagesRead } from '../../lib/api/messages'
 
 export default function AdminMessagesPage() {
   const { user } = useAuth()
-  const { refresh } = useWorkspace()
   const [searchParams] = useSearchParams()
   const projectFilter = searchParams.get('project') ?? 'all'
   const [activeProject, setActiveProject] = useState(projectFilter)
+  const [projects, setProjects] = useState<ClientProject[]>([])
+  const [messages, setMessages] = useState<ClientMessage[]>([])
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), [])
 
   useEffect(() => {
-    markAdminMessagesRead()
-    refresh()
-  }, [refresh])
+    let cancelled = false
+    ;(async () => {
+      if (isApiMode()) {
+        const projs = await fetchApiProjects()
+        if (cancelled) return
+        setProjects(projs)
+        const msgs = await fetchMessages(activeProject === 'all' ? undefined : activeProject)
+        if (cancelled) return
+        setMessages(msgs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()))
+        await markApiMessagesRead()
+        return
+      }
+
+      setProjects(getAllProjects().filter((p) => p.userId !== 'fixture-admin-1'))
+      const local =
+        activeProject === 'all' ? getAllMessagesForAdmin() : getMessagesForProject(activeProject)
+      setMessages(local.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()))
+      markAdminMessagesRead()
+    })().catch(console.error)
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeProject, reloadKey])
 
   if (!user) return null
 
-  const projects = getAllProjects().filter((p) => p.userId !== 'fixture-admin-1')
-  const filtered =
-    activeProject === 'all'
-      ? getAllMessagesForAdmin()
-      : getMessagesForProject(activeProject)
   const active = projects.find((p) => p.id === activeProject)
 
   return (
@@ -72,10 +93,10 @@ export default function AdminMessagesPage() {
         </aside>
 
         <div className="admin-thread-panel workspace-panel">
-          {filtered.length === 0 ? (
+          {messages.length === 0 ? (
             <EmptyState icon={MessageSquare} title="Aucun message" description="Les échanges apparaîtront ici." />
           ) : (
-            <MessageThread messages={filtered} />
+            <MessageThread messages={messages} />
           )}
 
           {activeProject !== 'all' && active && (
@@ -85,13 +106,13 @@ export default function AdminMessagesPage() {
                 clientUserId={active.userId}
                 projectId={active.id}
                 projectTitle={active.title}
-                onCreated={refresh}
+                onCreated={reload}
               />
               <MessageComposer
                 placeholder={`Répondre à ${getClientName(active.userId)}...`}
-                hint="Pièces jointes avec description et motif. Notification email et SMS au client."
+                hint="Pièces jointes avec description et motif. Le client reçoit un email si Resend est configuré."
                 onSend={async (content, attachments) => {
-                  sendMessage({
+                  await sendMessage({
                     sender: user,
                     clientUserId: active.userId,
                     projectId: active.id,
@@ -99,7 +120,7 @@ export default function AdminMessagesPage() {
                     content: content || 'Pièce(s) jointe(s) transmise(s).',
                     attachments: attachments as MessageAttachment[],
                   })
-                  refresh()
+                  reload()
                 }}
               />
             </>

@@ -6,6 +6,7 @@ import {
   loginWithSocial,
   logout as logoutService,
   registerAccount,
+  restoreApiSession,
 } from '../lib/auth/authService'
 import type { RegisterInput, Session, User } from '../lib/auth/types'
 
@@ -26,8 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setSession(getSession())
-    setIsLoading(false)
+    let cancelled = false
+    ;(async () => {
+      const session = await restoreApiSession()
+      if (!cancelled) {
+        setSession(session)
+        setIsLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = useCallback(async (email: string, password: string, remember = false) => {

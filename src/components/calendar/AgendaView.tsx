@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarPlus, Download, ExternalLink, Trash2 } from 'lucide-react'
+import { CalendarPlus, ChevronLeft, ChevronRight, Download, ExternalLink, Trash2 } from 'lucide-react'
 import type { Appointment, User } from '../../lib/auth/types'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import {
@@ -120,9 +120,13 @@ export default function AgendaView({ user, isAdmin, onChange }: AgendaViewProps)
     <div className="agenda-layout">
       <div className="agenda-calendar workspace-panel">
         <div className="agenda-calendar-head">
-          <button type="button" className="btn-secondary agenda-nav-btn" onClick={() => setMonthOffset((m) => m - 1)} aria-label="Mois précédent">‹</button>
+          <button type="button" className="btn-secondary agenda-nav-btn" onClick={() => setMonthOffset((m) => m - 1)} aria-label="Mois précédent">
+            <ChevronLeft size={18} aria-hidden="true" />
+          </button>
           <h2 className="agenda-month-title">{monthLabel}</h2>
-          <button type="button" className="btn-secondary agenda-nav-btn" onClick={() => setMonthOffset((m) => m + 1)} aria-label="Mois suivant">›</button>
+          <button type="button" className="btn-secondary agenda-nav-btn" onClick={() => setMonthOffset((m) => m + 1)} aria-label="Mois suivant">
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
         </div>
         <div className="agenda-weekdays" aria-hidden="true">
           {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((d) => (

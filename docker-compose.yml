@@ -1,6 +1,46 @@
 services:
-  sirius:
-    build: .
-    ports:
-      - "8080:80"
+  db:
+    image: postgres:16-alpine
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: sirius
+      POSTGRES_PASSWORD: sirius
+      POSTGRES_DB: sirius
+    volumes:
+      - sirius_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sirius -d sirius']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://sirius:sirius@db:5432/sirius
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      ADMIN_NOTIFY_EMAIL: ${ADMIN_NOTIFY_EMAIL:-admin@sirius.studio}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-Sirius Studio <noreply@sirius.studio>}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:8080}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      SEED_ON_START: ${SEED_ON_START:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: /api
+    ports:
+      - '8080:80'
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  sirius_pg:

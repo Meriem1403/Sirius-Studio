@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Bot, Hand, Plus, Target, Zap } from 'lucide-react'
 import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import {
   addManualProspect,
   getAllProspects,
-  getProspectsBySource,
   prospectStats,
   updateProspectStatus,
 } from '../../lib/services/prospectService'
@@ -12,42 +11,86 @@ import {
   PROSPECT_SOURCE_LABELS,
   PROSPECT_STATUS_LABELS,
 } from '../../fixtures/prospects'
-import type { ProspectStatus } from '../../lib/auth/types'
-import { useWorkspace } from '../../context/WorkspaceContext'
+import type { Prospect, ProspectStatus } from '../../lib/auth/types'
 import { formatDateTime } from '../../lib/client/format'
+import { isApiMode } from '../../lib/api/config'
+import { createProspectApi, fetchProspects, updateProspectApi } from '../../lib/api/prospects'
+import { syncWorkspace } from '../../lib/api/workspaceSync'
 
 type Tab = 'all' | 'auto' | 'manual'
 
 export default function AdminProspectionPage() {
-  const { refresh } = useWorkspace()
   const [tab, setTab] = useState<Tab>('all')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', company: '', email: '', sector: '', notes: '' })
+  const [all, setAll] = useState<Prospect[]>([])
+  const [reloadKey, setReloadKey] = useState(0)
 
-  const stats = prospectStats()
-  const all = getAllProspects()
+  const reload = useCallback(() => setReloadKey((k) => k + 1), [])
+
+  useEffect(() => {
+    if (isApiMode()) {
+      ;(async () => {
+        const list = await fetchProspects()
+        setAll(list)
+        await syncWorkspace()
+      })().catch(console.error)
+    } else {
+      setAll(getAllProspects())
+    }
+  }, [reloadKey])
+
+  const stats = useMemo(() => {
+    if (!isApiMode()) return prospectStats()
+    return {
+      total: all.length,
+      auto: all.filter((p) => p.source === 'auto').length,
+      manual: all.filter((p) => p.source === 'manual').length,
+      new: all.filter((p) => p.status === 'new').length,
+      qualified: all.filter((p) => p.status === 'qualified').length,
+      converted: all.filter((p) => p.status === 'converted').length,
+      avgScore: all.length ? Math.round(all.reduce((s, p) => s + p.score, 0) / all.length) : 0,
+    }
+  }, [all])
+
   const filtered =
-    tab === 'all' ? all : tab === 'auto' ? getProspectsBySource('auto') : getProspectsBySource('manual')
+    tab === 'all' ? all : tab === 'auto' ? all.filter((p) => p.source === 'auto') : all.filter((p) => p.source === 'manual')
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name.trim() || !form.email.trim() || !form.company.trim()) return
-    addManualProspect({
-      name: form.name,
-      company: form.company,
-      email: form.email,
-      sector: form.sector || 'Non renseigné',
-      notes: form.notes,
-      status: 'new',
-    })
+
+    if (isApiMode()) {
+      await createProspectApi({
+        name: form.name,
+        company: form.company,
+        email: form.email,
+        sector: form.sector || 'Non renseigné',
+        notes: form.notes,
+      })
+    } else {
+      addManualProspect({
+        name: form.name,
+        company: form.company,
+        email: form.email,
+        sector: form.sector || 'Non renseigné',
+        notes: form.notes,
+        status: 'new',
+      })
+    }
+
     setForm({ name: '', company: '', email: '', sector: '', notes: '' })
     setShowForm(false)
-    refresh()
+    reload()
   }
 
-  function handleStatus(id: string, status: ProspectStatus) {
-    updateProspectStatus(id, status)
-    refresh()
+  async function handleStatus(id: string, status: ProspectStatus) {
+    if (isApiMode()) {
+      await updateProspectApi(id, { status })
+    } else {
+      updateProspectStatus(id, status)
+    }
+    reload()
   }
 
   return (
@@ -102,26 +145,9 @@ export default function AdminProspectionPage() {
         </form>
       )}
 
-      <div className="prospect-pipeline">
-        {(['new', 'contacted', 'qualified', 'converted', 'lost'] as ProspectStatus[]).map((status) => {
-          const count = all.filter((p) => p.status === status).length
-          return (
-            <div key={status} className={`prospect-pipeline-col prospect-pipeline-col--${status}`}>
-              <span className="prospect-pipeline-label">{PROSPECT_STATUS_LABELS[status]}</span>
-              <span className="prospect-pipeline-count">{count}</span>
-            </div>
-          )
-        })}
-      </div>
-
       <div className="client-filter-row">
         {(['all', 'auto', 'manual'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            className={`client-filter-chip ${tab === t ? 'client-filter-chip--active' : ''}`}
-            onClick={() => setTab(t)}
-          >
+          <button key={t} type="button" className={`client-filter-chip ${tab === t ? 'client-filter-chip--active' : ''}`} onClick={() => setTab(t)}>
             {t === 'all' ? 'Tous' : t === 'auto' ? 'Automatiques' : 'Manuels'}
           </button>
         ))}
@@ -130,42 +156,26 @@ export default function AdminProspectionPage() {
       <ul className="prospect-list">
         {filtered.map((p) => (
           <li key={p.id} className="prospect-card">
-            <div className="prospect-card-main">
-              <div className="prospect-card-top">
-                <div>
-                  <h3 className="prospect-name">{p.name}</h3>
-                  <p className="prospect-company">{p.company} · {p.sector}</p>
-                  <p className="prospect-email">{p.email}</p>
-                </div>
-                <div className="prospect-badges">
-                  <span className={`prospect-source prospect-source--${p.source}`}>
-                    {p.source === 'auto' ? <Bot size={12} /> : <Hand size={12} />}
-                    {PROSPECT_SOURCE_LABELS[p.source]}
-                  </span>
-                  <span className="prospect-score">{p.score}</span>
-                </div>
+            <div className="prospect-card-top">
+              <div>
+                <p className="prospect-name">{p.name}</p>
+                <p className="prospect-company">{p.company}</p>
+                <p className="prospect-email">{p.email}</p>
               </div>
-              {p.notes && <p className="prospect-notes">{p.notes}</p>}
-              <p className="prospect-date">
-                Créé le {formatDateTime(p.createdAt)}
-                {p.lastContactAt && ` · Dernier contact ${formatDateTime(p.lastContactAt)}`}
-              </p>
+              <span className="prospect-score">{p.score}</span>
             </div>
+            <div className="prospect-meta">
+              <span>{PROSPECT_SOURCE_LABELS[p.source]}</span>
+              <span>{PROSPECT_STATUS_LABELS[p.status]}</span>
+              <span>{formatDateTime(p.createdAt)}</span>
+            </div>
+            {p.notes && <p className="prospect-notes">{p.notes}</p>}
             <div className="prospect-actions">
-              <span className={`prospect-status prospect-status--${p.status}`}>
-                {PROSPECT_STATUS_LABELS[p.status]}
-              </span>
-              {p.status !== 'converted' && p.status !== 'lost' && (
-                <select
-                  className="prospect-status-select"
-                  value={p.status}
-                  onChange={(e) => handleStatus(p.id, e.target.value as ProspectStatus)}
-                >
-                  {Object.entries(PROSPECT_STATUS_LABELS).map(([k, label]) => (
-                    <option key={k} value={k}>{label}</option>
-                  ))}
-                </select>
-              )}
+              {(['contacted', 'qualified', 'converted', 'lost'] as ProspectStatus[]).map((status) => (
+                <button key={status} type="button" className="btn-secondary prospect-status-btn" onClick={() => handleStatus(p.id, status)}>
+                  {PROSPECT_STATUS_LABELS[status]}
+                </button>
+              ))}
             </div>
           </li>
         ))}

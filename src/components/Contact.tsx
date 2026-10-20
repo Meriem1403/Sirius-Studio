@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CtaIcon } from './icons'
+import { isApiMode } from '../lib/api/config'
+import { submitContactLead } from '../lib/api/contact'
 
 type Situation = 'existing' | 'idea' | 'unknown'
 
@@ -86,6 +88,8 @@ function formatSiretDisplay(value: string): string {
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [siretError, setSiretError] = useState('')
   const [form, setForm] = useState({
     name: '',
@@ -100,7 +104,7 @@ export default function Contact() {
     message: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const companyProvided = form.company.trim().length > 0
 
@@ -110,6 +114,32 @@ export default function Contact() {
     }
 
     setSiretError('')
+    setSubmitError('')
+
+    if (isApiMode()) {
+      setSubmitting(true)
+      try {
+        await submitContactLead({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+          company: form.company.trim() || undefined,
+          siret: form.siret.trim() || undefined,
+          situation: form.situation,
+          website: form.website.trim() || undefined,
+          needs: form.needs,
+          objectives: form.objectives,
+          message: form.message.trim() || undefined,
+        })
+        setSubmitted(true)
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : 'Envoi impossible. Réessayez plus tard.')
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
     setSubmitted(true)
   }
 
@@ -428,9 +458,11 @@ export default function Contact() {
                 </ul>
               </fieldset>
 
-              <button type="submit" className="btn-primary w-full inline-flex items-center justify-center gap-2">
+              {submitError && <p className="client-alert-desc text-red-300 mt-2">{submitError}</p>}
+
+              <button type="submit" className="btn-primary w-full inline-flex items-center justify-center gap-2" disabled={submitting}>
                 <CtaIcon size={18} />
-                Demander ma maquette gratuite
+                {submitting ? 'Envoi en cours…' : 'Demander ma maquette gratuite'}
               </button>
             </motion.form>
           )}

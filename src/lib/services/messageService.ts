@@ -3,6 +3,9 @@ import type { ClientMessage } from '../auth/types'
 import { appendMessage, getMessages, saveMessages, uid } from '../data/store'
 import { notifyAdmins, notifyUser, senderLabel } from './notificationService'
 import { FIXTURE_ACCOUNTS } from '../../fixtures/users'
+import { isApiMode } from '../api/config'
+import { markApiMessagesRead, sendApiMessage } from '../api/messages'
+import { patchWorkspaceCache } from '../api/workspaceSync'
 
 export function getMessagesForUser(userId: string) {
   return getMessages()
@@ -24,14 +27,33 @@ export function countUnreadMessagesForAdmin() {
   return getMessages().filter((m) => m.role === 'client' && !m.read).length
 }
 
-export function markAdminMessagesRead() {
+export async function markAdminMessagesRead() {
+  if (isApiMode()) {
+    await markApiMessagesRead()
+    const messages = getMessages().map((m) => (m.role === 'client' ? { ...m, read: true } : m))
+    patchWorkspaceCache({ messages })
+    saveMessages(messages)
+    return
+  }
   const messages = getMessages().map((m) =>
     m.role === 'client' ? { ...m, read: true } : m,
   )
   saveMessages(messages)
 }
 
-export function markMessagesRead(userId: string, projectId?: string) {
+export async function markMessagesRead(userId: string, projectId?: string) {
+  if (isApiMode()) {
+    await markApiMessagesRead(projectId)
+    const messages = getMessages().map((m) => {
+      if (m.userId !== userId) return m
+      if (projectId && m.projectId !== projectId) return m
+      if (m.role !== 'team') return m
+      return { ...m, read: true }
+    })
+    patchWorkspaceCache({ messages })
+    saveMessages(messages)
+    return
+  }
   const messages = getMessages().map((m) => {
     if (m.userId !== userId) return m
     if (projectId && m.projectId !== projectId) return m
@@ -41,7 +63,7 @@ export function markMessagesRead(userId: string, projectId?: string) {
   saveMessages(messages)
 }
 
-export function sendMessage(input: {
+export async function sendMessage(input: {
   sender: User
   clientUserId: string
   projectId: string
@@ -50,6 +72,21 @@ export function sendMessage(input: {
   attachments?: MessageAttachment[]
   documentRequestId?: string
 }) {
+  if (isApiMode()) {
+    const message = await sendApiMessage({
+      projectId: input.projectId,
+      projectTitle: input.projectTitle,
+      clientUserId: input.clientUserId,
+      content: input.content,
+      attachments: input.attachments,
+      documentRequestId: input.documentRequestId,
+    })
+    const messages = [...getMessages(), message]
+    patchWorkspaceCache({ messages })
+    saveMessages(messages)
+    return message
+  }
+
   const role = input.sender.role === 'admin' ? 'team' : 'client'
   const hasAttachments = (input.attachments?.length ?? 0) > 0
   const message: ClientMessage = {

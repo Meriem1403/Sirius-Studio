@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MessageSquare } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useWorkspace } from '../../context/WorkspaceContext'
 import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
@@ -14,28 +13,53 @@ import {
 } from '../../lib/services/messageService'
 import { getProjectsForUser } from '../../lib/services/projectService'
 import EmptyState from '../../components/client/EmptyState'
-import type { MessageAttachment } from '../../lib/auth/types'
+import type { ClientMessage, ClientProject, MessageAttachment } from '../../lib/auth/types'
+import { isApiMode } from '../../lib/api/config'
+import { fetchApiProjects, fetchMessages, markApiMessagesRead } from '../../lib/api/messages'
 
 export default function ClientMessagesPage() {
   const { user } = useAuth()
-  const { refresh } = useWorkspace()
   const [searchParams] = useSearchParams()
   const [activeProject, setActiveProject] = useState(searchParams.get('project') ?? 'all')
+  const [projects, setProjects] = useState<ClientProject[]>([])
+  const [messages, setMessages] = useState<ClientMessage[]>([])
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), [])
 
   useEffect(() => {
     if (!user) return
-    if (activeProject === 'all') markMessagesRead(user.id)
-    else markMessagesRead(user.id, activeProject)
-    refresh()
-  }, [user, activeProject, refresh])
+    let cancelled = false
+
+    ;(async () => {
+      if (isApiMode()) {
+        const projs = await fetchApiProjects()
+        if (cancelled) return
+        setProjects(projs)
+        const msgs = await fetchMessages(activeProject === 'all' ? undefined : activeProject)
+        if (cancelled) return
+        setMessages(msgs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()))
+        await markApiMessagesRead(activeProject === 'all' ? undefined : activeProject)
+        return
+      }
+
+      setProjects(getProjectsForUser(user.id))
+      const local =
+        activeProject === 'all'
+          ? getMessagesForUser(user.id)
+          : getMessagesForProject(activeProject)
+      setMessages(local.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()))
+      if (activeProject === 'all') markMessagesRead(user.id)
+      else markMessagesRead(user.id, activeProject)
+    })().catch(console.error)
+
+    return () => {
+      cancelled = true
+    }
+  }, [user, activeProject, reloadKey])
 
   if (!user) return null
 
-  const projects = getProjectsForUser(user.id)
-  const filtered =
-    activeProject === 'all'
-      ? getMessagesForUser(user.id)
-      : getMessagesForProject(activeProject)
   const active = projects.find((p) => p.id === activeProject)
 
   return (
@@ -56,18 +80,18 @@ export default function ClientMessagesPage() {
         </div>
       )}
 
-      {filtered.length === 0 && activeProject === 'all' ? (
+      {messages.length === 0 && activeProject === 'all' ? (
         <EmptyState icon={MessageSquare} title="Aucun message" description="Sélectionnez un projet pour démarrer une conversation." />
       ) : (
         <div className="client-messages workspace-panel">
-          <MessageThread messages={filtered} />
+          <MessageThread messages={messages} />
 
           {activeProject !== 'all' && active && (
             <MessageComposer
               placeholder={`Message pour ${active.title}...`}
               hint="Joignez un fichier en indiquant de quoi il s'agit et pourquoi vous l'envoyez."
               onSend={async (content, attachments) => {
-                sendMessage({
+                await sendMessage({
                   sender: user,
                   clientUserId: user.id,
                   projectId: active.id,
@@ -75,7 +99,7 @@ export default function ClientMessagesPage() {
                   content: content || 'Pièce(s) jointe(s) transmise(s).',
                   attachments: attachments as MessageAttachment[],
                 })
-                refresh()
+                reload()
               }}
             />
           )}

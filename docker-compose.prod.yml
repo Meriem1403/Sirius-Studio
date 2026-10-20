@@ -1,0 +1,55 @@
+# Production : API + Postgres (+ Caddy HTTPS). Front sur Netlify.
+# Usage : docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sirius}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-sirius}
+    volumes:
+      - sirius_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-sirius} -d ${POSTGRES_DB:-sirius}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sirius}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sirius}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      ADMIN_NOTIFY_EMAIL: ${ADMIN_NOTIFY_EMAIL:?Set ADMIN_NOTIFY_EMAIL}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-Sirius Studio <noreply@example.com>}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:?Set PUBLIC_APP_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN:?Set CORS_ORIGIN}
+      SEED_ON_START: ${SEED_ON_START:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  sirius_pg:
+  caddy_data:
+  caddy_config:

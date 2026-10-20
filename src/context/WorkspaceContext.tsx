@@ -16,6 +16,8 @@ import type {
   Refund,
   UserProfile,
 } from '../lib/auth/types'
+import { isApiMode } from '../lib/api/config'
+import { syncWorkspace } from '../lib/api/workspaceSync'
 import {
   getActivities,
   getMessages,
@@ -57,7 +59,13 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [tick, setTick] = useState(0)
 
-  const refresh = useCallback(() => setTick((t) => t + 1), [])
+  const refresh = useCallback(() => {
+    if (isApiMode()) {
+      void syncWorkspace().finally(() => setTick((t) => t + 1))
+      return
+    }
+    setTick((t) => t + 1)
+  }, [])
 
   useEffect(() => {
     const handler = () => refresh()

@@ -6,7 +6,9 @@ import {
   saveDocumentRequests,
   uid,
 } from '../data/store'
+import { isApiMode } from '../api/config'
 import { notifyAdmins, notifyUser, senderLabel } from './notificationService'
+import { sendMessage } from './messageService'
 
 export function getRequestsForUser(userId: string) {
   return getDocumentRequests()
@@ -26,7 +28,7 @@ export function countPendingRequestsForUser(userId: string) {
   return getPendingRequestsForUser(userId).length
 }
 
-export function createDocumentRequest(input: {
+export async function createDocumentRequest(input: {
   admin: User
   clientUserId: string
   projectId: string
@@ -69,24 +71,36 @@ export function createDocumentRequest(input: {
     link: `/espace-client/documents?request=${request.id}`,
   })
 
-  appendMessage({
-    id: uid('msg'),
-    userId: input.clientUserId,
-    projectId: input.projectId,
-    projectTitle: input.projectTitle,
-    from: senderLabel(input.admin),
-    fromUserId: input.admin.id,
-    role: 'team',
-    content: `Demande de document : ${request.title}\n\nPourquoi : ${request.reason}`,
-    date: new Date().toISOString(),
-    read: false,
-    documentRequestId: request.id,
-  })
+  const content = `Demande de document : ${request.title}\n\nPourquoi : ${request.reason}`
+  if (isApiMode()) {
+    await sendMessage({
+      sender: input.admin,
+      clientUserId: input.clientUserId,
+      projectId: input.projectId,
+      projectTitle: input.projectTitle,
+      content,
+      documentRequestId: request.id,
+    })
+  } else {
+    appendMessage({
+      id: uid('msg'),
+      userId: input.clientUserId,
+      projectId: input.projectId,
+      projectTitle: input.projectTitle,
+      from: senderLabel(input.admin),
+      fromUserId: input.admin.id,
+      role: 'team',
+      content,
+      date: new Date().toISOString(),
+      read: false,
+      documentRequestId: request.id,
+    })
+  }
 
   return request
 }
 
-export function fulfillDocumentRequest(input: {
+export async function fulfillDocumentRequest(input: {
   requestId: string
   client: User
   attachments: MessageAttachment[]
@@ -103,20 +117,30 @@ export function fulfillDocumentRequest(input: {
     ? `Document transmis pour : ${request.title}\n\n${input.note.trim()}`
     : `Document transmis pour : ${request.title}`
 
-  const message = appendMessage({
-    id: uid('msg'),
-    userId: request.userId,
-    projectId: request.projectId,
-    projectTitle: request.projectTitle,
-    from: input.client.name,
-    fromUserId: input.client.id,
-    role: 'client',
-    content,
-    date: new Date().toISOString(),
-    read: false,
-    attachments: input.attachments,
-    documentRequestId: request.id,
-  })
+  const message = isApiMode()
+    ? await sendMessage({
+        sender: input.client,
+        clientUserId: request.userId,
+        projectId: request.projectId,
+        projectTitle: request.projectTitle,
+        content,
+        attachments: input.attachments,
+        documentRequestId: request.id,
+      })
+    : appendMessage({
+        id: uid('msg'),
+        userId: request.userId,
+        projectId: request.projectId,
+        projectTitle: request.projectTitle,
+        from: input.client.name,
+        fromUserId: input.client.id,
+        role: 'client',
+        content,
+        date: new Date().toISOString(),
+        read: false,
+        attachments: input.attachments,
+        documentRequestId: request.id,
+      })
 
   requests[index] = {
     ...request,

@@ -28,6 +28,8 @@ import {
   FIXTURE_QUOTES,
   FIXTURE_REFUNDS,
 } from '../../fixtures/billing'
+import { isApiMode } from '../api/config'
+import { getWorkspaceCache, patchWorkspaceCache, pushWorkspaceCollection } from '../api/workspaceSync'
 
 const KEYS = {
   projects: 'sirius_store_projects',
@@ -99,6 +101,7 @@ const SEED_NOTIFICATIONS = [
 ]
 
 function ensureInitialized() {
+  if (isApiMode()) return
   const version = localStorage.getItem('sirius_store_version')
   if (version === STORE_VERSION && localStorage.getItem(KEYS.initialized)) return
 
@@ -122,12 +125,30 @@ function ensureInitialized() {
 
 ensureInitialized()
 
+function persistCollection(
+  key: Parameters<typeof pushWorkspaceCollection>[0],
+  data: unknown,
+  slice: StoreSlice,
+  optimistic?: Partial<WorkspaceState>,
+) {
+  if (optimistic) patchWorkspaceCache(optimistic)
+  void pushWorkspaceCollection(key, data)
+  emitChange(slice)
+}
+
+type WorkspaceState = NonNullable<ReturnType<typeof getWorkspaceCache>>
+
 export function getProjects(): ClientProject[] {
+  if (isApiMode()) return getWorkspaceCache()?.projects ?? []
   ensureInitialized()
   return read<ClientProject[]>(KEYS.projects, FIXTURE_PROJECTS)
 }
 
 export function saveProjects(projects: ClientProject[]) {
+  if (isApiMode()) {
+    persistCollection('projects', projects, 'projects', { projects })
+    return
+  }
   write(KEYS.projects, projects)
   emitChange('projects')
 }
@@ -142,11 +163,17 @@ export function updateProject(projectId: string, patch: Partial<ClientProject>) 
 }
 
 export function getMessages(): ClientMessage[] {
+  if (isApiMode()) return getWorkspaceCache()?.messages ?? []
   ensureInitialized()
   return read<ClientMessage[]>(KEYS.messages, FIXTURE_MESSAGES)
 }
 
 export function saveMessages(messages: ClientMessage[]) {
+  if (isApiMode()) {
+    patchWorkspaceCache({ messages })
+    emitChange('messages')
+    return
+  }
   write(KEYS.messages, messages)
   emitChange('messages')
 }
@@ -159,11 +186,16 @@ export function appendMessage(message: ClientMessage) {
 }
 
 export function getActivities(): ClientActivity[] {
+  if (isApiMode()) return getWorkspaceCache()?.activities ?? []
   ensureInitialized()
   return read<ClientActivity[]>(KEYS.activities, FIXTURE_ACTIVITIES)
 }
 
 export function saveActivities(activities: ClientActivity[]) {
+  if (isApiMode()) {
+    persistCollection('activities', activities, 'activities', { activities })
+    return
+  }
   write(KEYS.activities, activities)
   emitChange('activities')
 }
@@ -176,11 +208,16 @@ export function appendActivity(activity: ClientActivity) {
 }
 
 export function getNotifications(): AppNotification[] {
+  if (isApiMode()) return getWorkspaceCache()?.notifications ?? []
   ensureInitialized()
   return read<AppNotification[]>(KEYS.notifications, [])
 }
 
 export function saveNotifications(notifications: AppNotification[]) {
+  if (isApiMode()) {
+    persistCollection('notifications', notifications, 'notifications', { notifications })
+    return
+  }
   write(KEYS.notifications, notifications)
   emitChange('notifications')
 }
@@ -193,11 +230,16 @@ export function appendNotification(notification: AppNotification) {
 }
 
 export function getProfiles(): UserProfile[] {
+  if (isApiMode()) return getWorkspaceCache()?.profiles ?? []
   ensureInitialized()
   return read<UserProfile[]>(KEYS.profiles, FIXTURE_PROFILES)
 }
 
 export function saveProfiles(profiles: UserProfile[]) {
+  if (isApiMode()) {
+    persistCollection('profiles', profiles, 'profiles', { profiles })
+    return
+  }
   write(KEYS.profiles, profiles)
   emitChange('profiles')
 }
@@ -226,13 +268,17 @@ export function updateProfile(userId: string, patch: Partial<UserProfile>) {
 }
 
 export function getDeliveries(): NotificationDelivery[] {
+  if (isApiMode()) return getWorkspaceCache()?.deliveries ?? []
   ensureInitialized()
   return read<NotificationDelivery[]>(KEYS.deliveries, [])
 }
 
 export function appendDelivery(delivery: NotificationDelivery) {
-  const deliveries = getDeliveries()
-  deliveries.unshift(delivery)
+  const deliveries = [delivery, ...getDeliveries()]
+  if (isApiMode()) {
+    persistCollection('deliveries', deliveries, 'deliveries', { deliveries })
+    return delivery
+  }
   write(KEYS.deliveries, deliveries)
   emitChange('deliveries')
   return delivery
@@ -254,71 +300,107 @@ export function uid(prefix: string) {
 }
 
 export function getDocumentRequests(): DocumentRequest[] {
+  if (isApiMode()) return getWorkspaceCache()?.documentRequests ?? []
   ensureInitialized()
   return read<DocumentRequest[]>(KEYS.documentRequests, FIXTURE_DOCUMENT_REQUESTS)
 }
 
 export function saveDocumentRequests(requests: DocumentRequest[]) {
+  if (isApiMode()) {
+    persistCollection('documentRequests', requests, 'documentRequests', { documentRequests: requests })
+    return
+  }
   write(KEYS.documentRequests, requests)
   emitChange('documentRequests')
 }
 
 export function getProspects(): Prospect[] {
+  if (isApiMode()) return getWorkspaceCache()?.prospects ?? []
   ensureInitialized()
   return read<Prospect[]>(KEYS.prospects, FIXTURE_PROSPECTS)
 }
 
 export function saveProspects(prospects: Prospect[]) {
+  if (isApiMode()) {
+    patchWorkspaceCache({ prospects })
+    emitChange('prospects')
+    return
+  }
   write(KEYS.prospects, prospects)
   emitChange('prospects')
 }
 
 export function getQuotes(): Quote[] {
+  if (isApiMode()) return getWorkspaceCache()?.quotes ?? []
   ensureInitialized()
   return read<Quote[]>(KEYS.quotes, FIXTURE_QUOTES)
 }
 
 export function saveQuotes(quotes: Quote[]) {
+  if (isApiMode()) {
+    persistCollection('quotes', quotes, 'quotes', { quotes })
+    return
+  }
   write(KEYS.quotes, quotes)
   emitChange('quotes')
 }
 
 export function getInvoices(): Invoice[] {
+  if (isApiMode()) return getWorkspaceCache()?.invoices ?? []
   ensureInitialized()
   return read<Invoice[]>(KEYS.invoices, FIXTURE_INVOICES)
 }
 
 export function saveInvoices(invoices: Invoice[]) {
+  if (isApiMode()) {
+    persistCollection('invoices', invoices, 'invoices', { invoices })
+    return
+  }
   write(KEYS.invoices, invoices)
   emitChange('invoices')
 }
 
 export function getPayments(): Payment[] {
+  if (isApiMode()) return getWorkspaceCache()?.payments ?? []
   ensureInitialized()
   return read<Payment[]>(KEYS.payments, FIXTURE_PAYMENTS)
 }
 
 export function savePayments(payments: Payment[]) {
+  if (isApiMode()) {
+    persistCollection('payments', payments, 'payments', { payments })
+    return
+  }
   write(KEYS.payments, payments)
   emitChange('payments')
 }
 
 export function getRefunds(): Refund[] {
+  if (isApiMode()) return getWorkspaceCache()?.refunds ?? []
   ensureInitialized()
   return read<Refund[]>(KEYS.refunds, FIXTURE_REFUNDS)
 }
 
 export function saveRefunds(refunds: Refund[]) {
+  if (isApiMode()) {
+    persistCollection('refunds', refunds, 'refunds', { refunds })
+    return
+  }
   write(KEYS.refunds, refunds)
   emitChange('refunds')
 }
 
 export function getAccountingEntries(): AccountingEntry[] {
+  if (isApiMode()) return getWorkspaceCache()?.accounting ?? []
   ensureInitialized()
   return read<AccountingEntry[]>(KEYS.accounting, FIXTURE_ACCOUNTING)
 }
 
 export function saveAccountingEntries(entries: AccountingEntry[]) {
+  if (isApiMode()) {
+    persistCollection('accounting', entries, 'accounting', { accounting: entries })
+    return
+  }
   write(KEYS.accounting, entries)
   emitChange('accounting')
 }
@@ -330,11 +412,16 @@ export function appendAccountingEntries(entries: AccountingEntry[]) {
 }
 
 export function getAppointments(): Appointment[] {
+  if (isApiMode()) return getWorkspaceCache()?.appointments ?? []
   ensureInitialized()
   return read<Appointment[]>(KEYS.appointments, FIXTURE_APPOINTMENTS)
 }
 
 export function saveAppointments(appointments: Appointment[]) {
+  if (isApiMode()) {
+    persistCollection('appointments', appointments, 'appointments', { appointments })
+    return
+  }
   write(KEYS.appointments, appointments)
   emitChange('appointments')
 }

@@ -53,7 +53,7 @@ export default function DocumentRequestCard({ request, client, onFulfilled }: Do
             requireAttachmentMeta
             submitLabel="Transmettre le document"
             onSend={async (content, attachments) => {
-              fulfillDocumentRequest({
+              await fulfillDocumentRequest({
                 requestId: request.id,
                 client,
                 attachments: attachments as MessageAttachment[],

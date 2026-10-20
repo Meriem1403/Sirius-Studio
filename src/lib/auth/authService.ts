@@ -1,6 +1,10 @@
 import { FIXTURE_ACCOUNTS, getFixtureByEmail } from '../../fixtures/users'
 import type { RegisterInput, Session, User } from './types'
 import { updateProfile, defaultNotificationPrefs } from '../data/store'
+import { isApiMode } from '../api/config'
+import { apiLogin, apiLogout, apiMe, apiRegister } from '../api/auth'
+import { clearWorkspaceCache, syncWorkspace } from '../api/workspaceSync'
+import { getAuthToken } from '../api/http'
 
 const SESSION_KEY = 'sirius_session'
 const REGISTERED_KEY = 'sirius_registered_users'
@@ -71,11 +75,42 @@ export function clearSession() {
   localStorage.removeItem(SESSION_KEY)
 }
 
+export async function restoreApiSession(): Promise<Session | null> {
+  if (!isApiMode()) return getSession()
+  if (!getAuthToken()) {
+    clearSession()
+    return null
+  }
+  try {
+    const user = await apiMe()
+    const session: Session = {
+      user,
+      remember: true,
+      createdAt: new Date().toISOString(),
+    }
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    await syncWorkspace()
+    return session
+  } catch {
+    apiLogout()
+    clearSession()
+    clearWorkspaceCache()
+    return null
+  }
+}
+
 export async function loginWithCredentials(
   email: string,
   password: string,
   remember = false,
 ): Promise<User> {
+  if (isApiMode()) {
+    const user = await apiLogin(email, password)
+    saveSession(user, remember)
+    await syncWorkspace()
+    return user
+  }
+
   await delay(700)
 
   const user = findAccount(email, password)
@@ -88,6 +123,10 @@ export async function loginWithCredentials(
 }
 
 export async function loginWithSocial(email: string): Promise<User> {
+  if (isApiMode()) {
+    throw new Error('Connexion sociale indisponible en production. Utilisez email et mot de passe.')
+  }
+
   await delay(800)
 
   const fixture = getFixtureByEmail(email)
@@ -101,6 +140,13 @@ export async function loginWithSocial(email: string): Promise<User> {
 }
 
 export async function registerAccount(input: RegisterInput): Promise<User> {
+  if (isApiMode()) {
+    const user = await apiRegister(input)
+    saveSession(user, true)
+    await syncWorkspace()
+    return user
+  }
+
   await delay(900)
 
   const email = input.email.trim().toLowerCase()
@@ -135,6 +181,8 @@ export async function registerAccount(input: RegisterInput): Promise<User> {
 }
 
 export function logout() {
+  if (isApiMode()) apiLogout()
+  clearWorkspaceCache()
   clearSession()
 }
 

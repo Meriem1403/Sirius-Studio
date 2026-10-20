@@ -1,0 +1,759 @@
+{
+  "projects": [
+    {
+      "id": "proj-1",
+      "userId": "fixture-client-1",
+      "title": "Site vitrine Laurent Design",
+      "type": "Site web",
+      "status": "en_cours",
+      "progress": 62,
+      "updatedAt": "2026-09-05",
+      "startedAt": "2026-08-12",
+      "deadline": "2026-10-15",
+      "nextStep": "Validation de la page Services",
+      "description": "Refonte complète du site vitrine avec une identité plus premium, orientée portfolio et prise de contact.",
+      "milestones": [
+        {
+          "id": "m1-1",
+          "label": "Brief et cadrage",
+          "done": true,
+          "date": "2026-08-15"
+        },
+        {
+          "id": "m1-2",
+          "label": "Maquette homepage",
+          "done": true,
+          "date": "2026-08-28"
+        },
+        {
+          "id": "m1-3",
+          "label": "Pages intérieures",
+          "done": true,
+          "date": "2026-09-02"
+        },
+        {
+          "id": "m1-4",
+          "label": "Validation client",
+          "done": false
+        },
+        {
+          "id": "m1-5",
+          "label": "Mise en ligne",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "proj-2",
+      "userId": "fixture-client-1",
+      "title": "Refonte identité visuelle",
+      "type": "Branding",
+      "status": "maquette",
+      "progress": 28,
+      "updatedAt": "2026-09-06",
+      "startedAt": "2026-09-01",
+      "deadline": "2026-09-20",
+      "nextStep": "Première maquette sous 48h",
+      "description": "Création d'une nouvelle direction visuelle : logo, palette, typographies et déclinaisons web.",
+      "milestones": [
+        {
+          "id": "m2-1",
+          "label": "Moodboard",
+          "done": true,
+          "date": "2026-09-03"
+        },
+        {
+          "id": "m2-2",
+          "label": "Propositions logo",
+          "done": false
+        },
+        {
+          "id": "m2-3",
+          "label": "Charte graphique",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "proj-3",
+      "userId": "fixture-client-2",
+      "title": "E-commerce Mercier & Co",
+      "type": "E-commerce",
+      "status": "validation",
+      "progress": 85,
+      "updatedAt": "2026-09-07",
+      "startedAt": "2026-07-01",
+      "deadline": "2026-09-30",
+      "nextStep": "Retours client sur le tunnel d'achat",
+      "description": "Boutique en ligne avec catalogue produits, paiement sécurisé et gestion des commandes.",
+      "milestones": [
+        {
+          "id": "m3-1",
+          "label": "Architecture boutique",
+          "done": true,
+          "date": "2026-07-15"
+        },
+        {
+          "id": "m3-2",
+          "label": "Design pages clés",
+          "done": true,
+          "date": "2026-08-10"
+        },
+        {
+          "id": "m3-3",
+          "label": "Intégration panier",
+          "done": true,
+          "date": "2026-08-28"
+        },
+        {
+          "id": "m3-4",
+          "label": "Recette client",
+          "done": false
+        },
+        {
+          "id": "m3-5",
+          "label": "Lancement",
+          "done": false
+        }
+      ],
+      "mockupUrl": "https://mercier-co-demo.netlify.app",
+      "mockupPublishedAt": "2026-09-07T09:00:00",
+      "validation": {
+        "choice": "pending"
+      }
+    },
+    {
+      "id": "proj-4",
+      "userId": "fixture-client-2",
+      "title": "Application mobile catalogue",
+      "type": "App mobile",
+      "status": "maquette",
+      "progress": 15,
+      "updatedAt": "2026-09-04",
+      "startedAt": "2026-09-02",
+      "deadline": "2026-11-01",
+      "nextStep": "Wireframes écrans principaux",
+      "description": "Application iOS et Android pour consulter le catalogue et demander un devis en showroom.",
+      "milestones": [
+        {
+          "id": "m4-1",
+          "label": "Atelier fonctionnel",
+          "done": true,
+          "date": "2026-09-03"
+        },
+        {
+          "id": "m4-2",
+          "label": "Wireframes",
+          "done": false
+        },
+        {
+          "id": "m4-3",
+          "label": "Maquettes UI",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "proj-5",
+      "userId": "fixture-admin-1",
+      "title": "Portail interne Sirius",
+      "type": "Logiciel",
+      "status": "en_cours",
+      "progress": 45,
+      "updatedAt": "2026-09-06",
+      "startedAt": "2026-06-01",
+      "deadline": "2026-12-01",
+      "nextStep": "Module gestion des maquettes",
+      "description": "Outil interne pour piloter les projets clients, les maquettes et le suivi des livraisons.",
+      "milestones": [
+        {
+          "id": "m5-1",
+          "label": "Spécifications",
+          "done": true,
+          "date": "2026-06-20"
+        },
+        {
+          "id": "m5-2",
+          "label": "Authentification",
+          "done": true,
+          "date": "2026-07-30"
+        },
+        {
+          "id": "m5-3",
+          "label": "Espace client",
+          "done": false
+        },
+        {
+          "id": "m5-4",
+          "label": "Notifications",
+          "done": false
+        }
+      ]
+    }
+  ],
+  "activities": [
+    {
+      "id": "act-1",
+      "userId": "fixture-client-1",
+      "projectId": "proj-1",
+      "label": "Maquette homepage v2 disponible",
+      "date": "2026-09-06T14:30:00",
+      "type": "file"
+    },
+    {
+      "id": "act-2",
+      "userId": "fixture-client-1",
+      "projectId": "proj-2",
+      "label": "Message de l'équipe Sirius sur le projet branding",
+      "date": "2026-09-05T10:15:00",
+      "type": "message"
+    },
+    {
+      "id": "act-3",
+      "userId": "fixture-client-2",
+      "projectId": "proj-3",
+      "label": "Statut passé en validation client",
+      "date": "2026-09-07T09:00:00",
+      "type": "status"
+    },
+    {
+      "id": "act-4",
+      "userId": "fixture-client-2",
+      "projectId": "proj-3",
+      "label": "Nouveau commentaire sur le checkout",
+      "date": "2026-09-06T16:45:00",
+      "type": "message"
+    },
+    {
+      "id": "act-5",
+      "userId": "fixture-admin-1",
+      "projectId": "proj-5",
+      "label": "3 nouvelles demandes de maquette",
+      "date": "2026-09-07T08:30:00",
+      "type": "status"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-seed-1",
+      "userId": "fixture-client-2",
+      "type": "mockup_ready",
+      "title": "Votre maquette est prête",
+      "body": "Consultez la maquette E-commerce Mercier & Co et indiquez si elle vous convient.",
+      "date": "2026-09-07T09:05:00",
+      "read": false,
+      "projectId": "proj-3",
+      "link": "/espace-client/projets/proj-3"
+    }
+  ],
+  "profiles": [
+    {
+      "userId": "fixture-client-1",
+      "phone": "+33 6 12 34 56 78",
+      "notificationPrefs": {
+        "email": true,
+        "sms": true,
+        "mockupReady": true,
+        "messages": true,
+        "quotes": true,
+        "statusUpdates": true
+      }
+    },
+    {
+      "userId": "fixture-client-2",
+      "phone": "+33 6 98 76 54 32",
+      "notificationPrefs": {
+        "email": true,
+        "sms": true,
+        "mockupReady": true,
+        "messages": true,
+        "quotes": true,
+        "statusUpdates": true
+      }
+    },
+    {
+      "userId": "fixture-admin-1",
+      "phone": "+33 6 11 22 33 44",
+      "notificationPrefs": {
+        "email": true,
+        "sms": false,
+        "mockupReady": true,
+        "messages": true,
+        "quotes": true,
+        "statusUpdates": true
+      }
+    }
+  ],
+  "deliveries": [],
+  "documentRequests": [
+    {
+      "id": "dreq-1",
+      "userId": "fixture-client-1",
+      "projectId": "proj-1",
+      "projectTitle": "Site vitrine Laurent Design",
+      "requestedBy": "fixture-admin-1",
+      "requestedByName": "Alex Sirius",
+      "title": "Logo vectoriel et charte existante",
+      "reason": "Pour aligner la maquette sur votre identité actuelle et éviter les allers-retours sur les couleurs.",
+      "status": "pending",
+      "createdAt": "2026-09-06T11:00:00"
+    }
+  ],
+  "prospects": [
+    {
+      "id": "prosp-1",
+      "name": "Sophie Martin",
+      "company": "Atelier Lumière",
+      "email": "sophie@atelier-lumiere.fr",
+      "phone": "+33 6 45 12 88 90",
+      "sector": "Architecture",
+      "source": "auto",
+      "status": "new",
+      "score": 82,
+      "notes": "Visite récente de la page tarifs, secteur premium.",
+      "createdAt": "2026-09-07T08:15:00"
+    },
+    {
+      "id": "prosp-2",
+      "name": "Julien Rousseau",
+      "company": "Rousseau Immobilier",
+      "email": "j.rousseau@ri-immo.com",
+      "phone": "+33 6 77 33 44 55",
+      "sector": "Immobilier",
+      "source": "auto",
+      "status": "contacted",
+      "score": 74,
+      "notes": "A téléchargé la brochure processus, relance J+2.",
+      "createdAt": "2026-09-05T14:20:00",
+      "lastContactAt": "2026-09-06T10:00:00"
+    },
+    {
+      "id": "prosp-3",
+      "name": "Camille Dupont",
+      "company": "BioFresh",
+      "email": "camille@biofresh.co",
+      "sector": "Agroalimentaire",
+      "source": "manual",
+      "status": "qualified",
+      "score": 91,
+      "notes": "Rencontrée au salon Made in France, besoin e-commerce + branding.",
+      "createdAt": "2026-09-03T09:30:00",
+      "lastContactAt": "2026-09-07T15:30:00"
+    },
+    {
+      "id": "prosp-4",
+      "name": "Marc Fontaine",
+      "company": "Fontaine Conseil",
+      "email": "marc@fontaine-conseil.fr",
+      "sector": "Conseil",
+      "source": "manual",
+      "status": "converted",
+      "score": 95,
+      "notes": "Converti en client Marie Laurent (référence).",
+      "createdAt": "2026-08-20T11:00:00",
+      "lastContactAt": "2026-08-28T16:00:00",
+      "convertedUserId": "fixture-client-1"
+    },
+    {
+      "id": "prosp-5",
+      "name": "Élodie Perrin",
+      "company": "Studio Néo",
+      "email": "elodie@studioneo.fr",
+      "sector": "Design",
+      "source": "auto",
+      "status": "lost",
+      "score": 38,
+      "notes": "Budget insuffisant pour l'offre Sirius.",
+      "createdAt": "2026-08-15T13:45:00",
+      "lastContactAt": "2026-08-22T09:00:00"
+    },
+    {
+      "id": "prosp-6",
+      "name": "Karim Benali",
+      "company": "TechFlow SAS",
+      "email": "k.benali@techflow.io",
+      "phone": "+33 6 22 88 99 00",
+      "sector": "SaaS",
+      "source": "auto",
+      "status": "new",
+      "score": 88,
+      "notes": "Demande maquette gratuite via le site, startup série B.",
+      "createdAt": "2026-09-07T17:00:00"
+    }
+  ],
+  "quotes": [
+    {
+      "id": "quote-1",
+      "number": "DEV-2026-001",
+      "userId": "fixture-client-1",
+      "projectId": "proj-1",
+      "projectTitle": "Site vitrine Laurent Design",
+      "clientName": "Marie Laurent",
+      "clientCompany": "Laurent Design",
+      "status": "sent",
+      "lines": [
+        {
+          "id": "ql-1",
+          "label": "Conception & design UI",
+          "description": "Homepage + 5 pages intérieures",
+          "quantity": 1,
+          "unitPriceHT": 3200,
+          "vatRate": 20
+        },
+        {
+          "id": "ql-2",
+          "label": "Intégration & mise en ligne",
+          "quantity": 1,
+          "unitPriceHT": 1800,
+          "vatRate": 20
+        }
+      ],
+      "totalHT": 5000,
+      "totalTVA": 1000,
+      "totalTTC": 6000,
+      "validUntil": "2026-10-15",
+      "depositPercent": 30,
+      "createdAt": "2026-09-04T10:00:00",
+      "sentAt": "2026-09-04T11:30:00",
+      "notes": "Acompte de 30 % à la commande, solde à la livraison."
+    },
+    {
+      "id": "quote-2",
+      "number": "DEV-2026-002",
+      "userId": "fixture-client-2",
+      "projectId": "proj-3",
+      "projectTitle": "E-commerce Mercier & Co",
+      "clientName": "Thomas Mercier",
+      "clientCompany": "Mercier & Co",
+      "status": "draft",
+      "lines": [
+        {
+          "id": "ql-3",
+          "label": "Développement e-commerce sur mesure",
+          "description": "Catalogue, panier, tunnel d'achat, back-office",
+          "quantity": 1,
+          "unitPriceHT": 12000,
+          "vatRate": 20
+        },
+        {
+          "id": "ql-4",
+          "label": "Formation équipe & documentation",
+          "quantity": 1,
+          "unitPriceHT": 800,
+          "vatRate": 20
+        }
+      ],
+      "totalHT": 12800,
+      "totalTVA": 2560,
+      "totalTTC": 15360,
+      "validUntil": "2026-10-30",
+      "depositPercent": 30,
+      "createdAt": "2026-09-08T08:00:00",
+      "notes": "Devis généré suite à la demande client après validation maquette."
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-1",
+      "number": "FAC-2026-001",
+      "userId": "fixture-client-1",
+      "projectId": "proj-1",
+      "projectTitle": "Site vitrine Laurent Design",
+      "clientName": "Marie Laurent",
+      "clientCompany": "Laurent Design",
+      "quoteId": "quote-1",
+      "status": "partial",
+      "lines": [
+        {
+          "id": "il-1",
+          "label": "Acompte 30 % — conception & design",
+          "quantity": 1,
+          "unitPriceHT": 1500,
+          "vatRate": 20
+        }
+      ],
+      "totalHT": 1500,
+      "totalTVA": 300,
+      "totalTTC": 1800,
+      "amountPaid": 1800,
+      "dueDate": "2026-09-20",
+      "phase": "deposit",
+      "isDeposit": true,
+      "depositPercent": 30,
+      "createdAt": "2026-09-05T09:00:00",
+      "sentAt": "2026-09-05T09:15:00",
+      "signedAt": "2026-09-05T14:22:00",
+      "signature": {
+        "signedAt": "2026-09-05T14:22:00",
+        "signedBy": "Marie Laurent",
+        "signatureDataUrl": ""
+      }
+    },
+    {
+      "id": "inv-2",
+      "number": "FAC-2026-002",
+      "userId": "fixture-client-1",
+      "projectId": "proj-1",
+      "projectTitle": "Site vitrine Laurent Design",
+      "clientName": "Marie Laurent",
+      "clientCompany": "Laurent Design",
+      "quoteId": "quote-1",
+      "status": "sent",
+      "lines": [
+        {
+          "id": "il-2",
+          "label": "Solde — intégration & livraison",
+          "quantity": 1,
+          "unitPriceHT": 3500,
+          "vatRate": 20
+        }
+      ],
+      "totalHT": 3500,
+      "totalTVA": 700,
+      "totalTTC": 4200,
+      "amountPaid": 0,
+      "dueDate": "2026-10-20",
+      "phase": "balance",
+      "createdAt": "2026-09-07T10:00:00",
+      "sentAt": "2026-09-07T10:30:00"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-1",
+      "invoiceId": "inv-1",
+      "invoiceNumber": "FAC-2026-001",
+      "userId": "fixture-client-1",
+      "amount": 1800,
+      "method": "card",
+      "status": "completed",
+      "reference": "PAY-2026-0001",
+      "createdAt": "2026-09-05T15:00:00",
+      "completedAt": "2026-09-05T15:00:05",
+      "cardLast4": "4242"
+    }
+  ],
+  "refunds": [],
+  "accounting": [
+    {
+      "id": "acc-seed-1",
+      "date": "2026-09-05T09:15:00",
+      "label": "Facture FAC-2026-001 · Marie Laurent",
+      "type": "receivable",
+      "accountCode": "411",
+      "accountLabel": "Clients",
+      "debit": 1800,
+      "credit": 0,
+      "reference": "FAC-2026-001",
+      "invoiceId": "inv-1",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-2",
+      "date": "2026-09-05T09:15:00",
+      "label": "Facture FAC-2026-001 · vente HT",
+      "type": "revenue",
+      "accountCode": "706",
+      "accountLabel": "Prestations de services",
+      "debit": 0,
+      "credit": 1500,
+      "reference": "FAC-2026-001",
+      "invoiceId": "inv-1",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-3",
+      "date": "2026-09-05T09:15:00",
+      "label": "Facture FAC-2026-001 · TVA",
+      "type": "vat_collected",
+      "accountCode": "44571",
+      "accountLabel": "TVA collectée",
+      "debit": 0,
+      "credit": 300,
+      "reference": "FAC-2026-001",
+      "invoiceId": "inv-1",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-4",
+      "date": "2026-09-05T15:00:05",
+      "label": "Encaissement PAY-2026-0001",
+      "type": "payment",
+      "accountCode": "512",
+      "accountLabel": "Banque",
+      "debit": 1800,
+      "credit": 0,
+      "reference": "PAY-2026-0001",
+      "invoiceId": "inv-1",
+      "paymentId": "pay-1",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-5",
+      "date": "2026-09-05T15:00:05",
+      "label": "Règlement facture FAC-2026-001",
+      "type": "receivable",
+      "accountCode": "411",
+      "accountLabel": "Clients",
+      "debit": 0,
+      "credit": 1800,
+      "reference": "PAY-2026-0001",
+      "invoiceId": "inv-1",
+      "paymentId": "pay-1",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-6",
+      "date": "2026-09-07T10:30:00",
+      "label": "Facture FAC-2026-002 · Marie Laurent",
+      "type": "receivable",
+      "accountCode": "411",
+      "accountLabel": "Clients",
+      "debit": 4200,
+      "credit": 0,
+      "reference": "FAC-2026-002",
+      "invoiceId": "inv-2",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-7",
+      "date": "2026-09-07T10:30:00",
+      "label": "Facture FAC-2026-002 · vente HT",
+      "type": "revenue",
+      "accountCode": "706",
+      "accountLabel": "Prestations de services",
+      "debit": 0,
+      "credit": 3500,
+      "reference": "FAC-2026-002",
+      "invoiceId": "inv-2",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    },
+    {
+      "id": "acc-seed-8",
+      "date": "2026-09-07T10:30:00",
+      "label": "Facture FAC-2026-002 · TVA",
+      "type": "vat_collected",
+      "accountCode": "44571",
+      "accountLabel": "TVA collectée",
+      "debit": 0,
+      "credit": 700,
+      "reference": "FAC-2026-002",
+      "invoiceId": "inv-2",
+      "userId": "fixture-client-1",
+      "autoGenerated": true
+    }
+  ],
+  "appointments": [
+    {
+      "id": "appt-1",
+      "title": "Point avancement — Site vitrine",
+      "description": "Revue des pages intérieures et planning de livraison.",
+      "startAt": "2026-09-12T10:00:00",
+      "endAt": "2026-09-12T10:45:00",
+      "userId": "fixture-client-1",
+      "clientName": "Marie Laurent",
+      "projectId": "proj-1",
+      "projectTitle": "Site vitrine Laurent Design",
+      "createdBy": "fixture-admin-1",
+      "location": "Visio",
+      "meetingUrl": "https://meet.sirius.studio/marie-sept",
+      "type": "review"
+    },
+    {
+      "id": "appt-2",
+      "title": "Kick-off e-commerce",
+      "description": "Lancement production après paiement de l'acompte.",
+      "startAt": "2026-09-15T14:00:00",
+      "endAt": "2026-09-15T15:00:00",
+      "userId": "fixture-client-2",
+      "clientName": "Thomas Mercier",
+      "projectId": "proj-3",
+      "projectTitle": "E-commerce Mercier & Co",
+      "createdBy": "fixture-admin-1",
+      "location": "Visio",
+      "meetingUrl": "https://meet.sirius.studio/mercier-kickoff",
+      "type": "kickoff"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1",
+      "userId": "fixture-client-1",
+      "projectId": "proj-1",
+      "projectTitle": "Site vitrine Laurent Design",
+      "from": "Camille · Sirius Studio",
+      "fromUserId": "fixture-admin-1",
+      "role": "team",
+      "content": "La v2 de la homepage est en ligne dans votre espace. Dites-nous ce que vous en pensez, on ajuste avant de passer aux pages Services.",
+      "date": "2026-09-06T14:30:00",
+      "read": false
+    },
+    {
+      "id": "msg-2",
+      "userId": "fixture-client-1",
+      "projectId": "proj-2",
+      "projectTitle": "Refonte identité visuelle",
+      "from": "Marie Laurent",
+      "fromUserId": "fixture-client-1",
+      "role": "client",
+      "content": "J'aimerais une direction plus minimaliste, avec moins de violet. On peut explorer des tons plus neutres ?",
+      "date": "2026-09-05T10:15:00",
+      "read": true
+    },
+    {
+      "id": "msg-3",
+      "userId": "fixture-client-1",
+      "projectId": "proj-2",
+      "projectTitle": "Refonte identité visuelle",
+      "from": "Camille · Sirius Studio",
+      "fromUserId": "fixture-admin-1",
+      "role": "team",
+      "content": "Bien noté. On prépare deux nouvelles pistes avec une palette plus sobre d'ici demain.",
+      "date": "2026-09-05T16:00:00",
+      "read": true
+    },
+    {
+      "id": "msg-4",
+      "userId": "fixture-client-2",
+      "projectId": "proj-3",
+      "projectTitle": "E-commerce Mercier & Co",
+      "from": "Thomas · Sirius Studio",
+      "fromUserId": "fixture-admin-1",
+      "role": "team",
+      "content": "Le tunnel d'achat est prêt pour vos retours. Testez le parcours mobile en priorité, c'est là qu'on veut votre avis.",
+      "date": "2026-09-06T16:45:00",
+      "read": false
+    },
+    {
+      "id": "msg-5",
+      "userId": "fixture-client-2",
+      "projectId": "proj-3",
+      "projectTitle": "E-commerce Mercier & Co",
+      "from": "Thomas Mercier",
+      "fromUserId": "fixture-client-2",
+      "role": "client",
+      "content": "Le bouton paiement est un peu bas sur mobile. Possible de le remonter ?",
+      "date": "2026-09-07T09:30:00",
+      "read": true
+    },
+    {
+      "id": "msg-6",
+      "userId": "fixture-admin-1",
+      "projectId": "proj-5",
+      "projectTitle": "Portail interne Sirius",
+      "from": "Alex Sirius",
+      "fromUserId": "fixture-admin-1",
+      "role": "client",
+      "content": "Priorité sur le module espace client cette semaine. Les fixtures de test sont prêtes.",
+      "date": "2026-09-07T08:30:00",
+      "read": true
+    }
+  ]
+}

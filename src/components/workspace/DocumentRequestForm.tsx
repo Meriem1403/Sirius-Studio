@@ -22,10 +22,10 @@ export default function DocumentRequestForm({
   const [title, setTitle] = useState('')
   const [reason, setReason] = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !reason.trim()) return
-    createDocumentRequest({ admin, clientUserId, projectId, projectTitle, title, reason })
+    await createDocumentRequest({ admin, clientUserId, projectId, projectTitle, title, reason })
     setTitle('')
     setReason('')
     setOpen(false)
