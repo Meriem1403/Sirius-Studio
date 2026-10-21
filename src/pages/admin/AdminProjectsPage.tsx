@@ -1,13 +1,21 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import { useWorkspace } from '../../context/WorkspaceContext'
-import { getClientAccount } from '../../lib/services/projectService'
+import { getClientDisplayName } from '../../lib/services/projectService'
 import { MOCKUP_CHOICE_LABELS } from '../../lib/client/validation'
 import StatusBadge from '../../components/client/StatusBadge'
+import { isApiMode } from '../../lib/api/config'
+import { syncWorkspace } from '../../lib/api/workspaceSync'
 
 export default function AdminProjectsPage() {
-  const { projects: workspaceProjects } = useWorkspace()
+  const { projects: workspaceProjects, refresh } = useWorkspace()
   const projects = workspaceProjects.filter((p) => p.userId !== 'fixture-admin-1')
+
+  useEffect(() => {
+    if (!isApiMode()) return
+    void syncWorkspace().then(() => refresh())
+  }, [refresh])
 
   return (
     <>
@@ -21,9 +29,17 @@ export default function AdminProjectsPage() {
         </div>
       </header>
 
+      {projects.length === 0 && (
+        <p className="client-muted client-section">
+          Aucun projet client pour l’instant. Créez-en un depuis{' '}
+          <Link to="/espace-admin/prospection" className="client-link">Prospection</Link>
+          {' '}→ « Créer compte client + projet ».
+        </p>
+      )}
+
       <ul className="admin-project-list admin-project-list--full">
         {projects.map((p) => {
-          const client = getClientAccount(p.userId)
+          const clientName = getClientDisplayName(p.userId, p)
           return (
             <li key={p.id}>
               <Link to={`/espace-admin/projets/${p.id}`} className="admin-project-card">
@@ -31,10 +47,8 @@ export default function AdminProjectsPage() {
                   <div className="min-w-0 flex-1">
                     <h3 className="client-project-title">{p.title}</h3>
                     <p className="client-project-type">
-                      {client?.name}
-                      {client?.company ? ` · ${client.company}` : ''}
-                      {' · '}
-                      {p.type}
+                      {clientName}
+                      {p.type ? ` · ${p.type}` : ''}
                     </p>
                   </div>
                   <StatusBadge status={p.status} compact />

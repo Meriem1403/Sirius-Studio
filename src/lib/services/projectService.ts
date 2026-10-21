@@ -181,13 +181,27 @@ export function getClientAccount(userId: string) {
   const name = quote?.clientName ?? invoice?.clientName
   if (!name && !project) return undefined
 
+  const companyFromBilling = quote?.clientCompany ?? invoice?.clientCompany
+
   return {
     id: userId,
     email: '',
     name: name ?? 'Client',
-    company: quote?.clientCompany ?? invoice?.clientCompany,
+    company: companyFromBilling,
     role: 'client' as const,
   }
+}
+
+/** Nom affiché admin : devis/factures, sinon extrait de la description projet (conversion prospect). */
+export function getClientDisplayName(userId: string, project?: { description?: string }) {
+  const account = getClientAccount(userId)
+  if (account && account.name !== 'Client') return account.name
+
+  const desc = project?.description ?? getProjects().find((p) => p.userId === userId)?.description
+  const match = desc?.match(/prospection \(([^)]+)\)/i)
+  if (match?.[1]) return match[1].trim()
+
+  return account?.name ?? 'Client'
 }
 
 export function countPendingValidations() {

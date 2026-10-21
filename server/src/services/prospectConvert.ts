@@ -38,6 +38,10 @@ export async function convertProspectToClient(
   const existingForUser = projects.find((p) => p.userId === userId && p.title === input.projectTitle)
   const projectId = existingForUser ? String(existingForUser.id) : uid('proj')
 
+  let createdProject: Record<string, unknown> | null = existingForUser
+    ? (existingForUser as Record<string, unknown>)
+    : null
+
   if (!existingForUser) {
     const today = new Date().toISOString().slice(0, 10)
     const project = {
@@ -57,10 +61,13 @@ export async function convertProspectToClient(
         { id: uid('m'), label: 'Livraison', done: false },
       ],
     }
+    createdProject = project
     projects.unshift(project)
     await writeCollection('projects', projects)
     await syncProjectsTable(projects)
   }
+
+  const projectsAfter = (await readCollection('projects')) as Record<string, unknown>[]
 
   const profiles = (await readCollection('profiles')) as Record<string, unknown>[]
   if (!profiles.some((p) => p.userId === userId)) {
@@ -87,6 +94,8 @@ export async function convertProspectToClient(
   return {
     userId,
     projectId,
+    project: createdProject,
+    projects: projectsAfter,
     tempPassword,
     email: row.email as string,
     name: row.name as string,

@@ -76,9 +76,17 @@ export async function syncWorkspace() {
   if (!isApiMode()) return
   try {
     cache = await apiFetch<WorkspaceState>('/workspace/state')
-  } catch {
-    cache = emptyState()
+    window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: { slice: 'projects' } }))
+  } catch (err) {
+    console.error('[workspace] sync failed', err)
+    throw err
   }
+}
+
+/** Met à jour le cache local après création côté serveur (ex. conversion prospect). */
+export function applyWorkspaceProjects(projects: ClientProject[]) {
+  if (!isApiMode()) return
+  patchWorkspaceCache({ projects })
   window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: { slice: 'projects' } }))
 }
 

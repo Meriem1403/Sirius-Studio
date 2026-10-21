@@ -7,6 +7,7 @@ import { formatDateTime } from '../../lib/client/format'
 import { formatPhoneForTel, resolveLeadDisplay } from '../../lib/prospects/leadDisplay'
 import { isApiMode } from '../../lib/api/config'
 import { convertProspectApi } from '../../lib/api/prospects'
+import { applyWorkspaceProjects, syncWorkspace } from '../../lib/api/workspaceSync'
 
 const STATUS_FLOW: ProspectStatus[] = ['new', 'contacted', 'qualified', 'converted', 'lost']
 
@@ -49,12 +50,14 @@ export default function ProspectCard({ prospect, busy, linkedProjectId, onStatus
         projectTitle: projectTitle.trim(),
         projectType: projectType.trim() || 'Site web',
       })
+      applyWorkspaceProjects(result.projects)
       setConvertResult({
         tempPassword: result.tempPassword,
         email: result.email,
         projectId: result.projectId,
         userId: result.userId,
       })
+      await syncWorkspace().catch(() => undefined)
       onConverted?.()
     } catch {
       setConvertError('Conversion impossible. Vérifiez que l’email n’est pas déjà utilisé autrement.')

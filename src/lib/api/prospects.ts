@@ -1,4 +1,4 @@
-import type { Prospect } from '../auth/types'
+import type { ClientProject, Prospect } from '../auth/types'
 import { apiFetch } from './http'
 
 export async function fetchProspects() {
@@ -36,6 +36,8 @@ export async function convertProspectApi(
   return apiFetch<{
     userId: string
     projectId: string
+    project: ClientProject
+    projects: ClientProject[]
     tempPassword?: string
     email: string
     name: string
