@@ -224,7 +224,9 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
           <p className="agenda-calendar-hint client-message-hint">
             {upcomingCount > 0
               ? 'Aucun RDV sur ce mois — changez de mois avec les flèches ou consultez la liste à droite.'
-              : 'Aucun RDV planifié — créez-en un avec le bouton « Nouveau rendez-vous ».'}
+              : isAdmin
+                ? 'Aucun RDV planifié — créez-en un avec le bouton « Nouveau rendez-vous ».'
+                : 'Aucun RDV planifié — l’équipe Sirius vous proposera un créneau par message ou email.'}
           </p>
         )}
       </div>

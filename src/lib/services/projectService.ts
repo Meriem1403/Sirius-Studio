@@ -85,7 +85,7 @@ export function publishMockup(projectId: string, admin: User) {
   return updated
 }
 
-export function submitMockupValidation(input: {
+export async function submitMockupValidation(input: {
   projectId: string
   client: User
   choice: MockupClientChoice
@@ -141,7 +141,7 @@ export function submitMockupValidation(input: {
     ? `\n\nCommentaire : ${input.feedback.trim()}`
     : ''
 
-  sendMessage({
+  await sendMessage({
     sender: input.client,
     clientUserId: project.userId,
     projectId: input.projectId,

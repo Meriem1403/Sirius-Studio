@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, Send } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { isApiMode } from '../../lib/api/config'
-import { submitClientProjectRequest } from '../../lib/api/requests'
-import { applyWorkspaceProjects, syncWorkspace } from '../../lib/api/workspaceSync'
+import { useWorkspace } from '../../context/WorkspaceContext'
+import { submitClientRequest } from '../../lib/services/clientRequestService'
 
 const needOptions = [
   'Site vitrine',
@@ -22,7 +21,11 @@ function toggleNeed(list: Need[], item: Need): Need[] {
 
 export default function ClientNewRequestPage() {
   const { user } = useAuth()
+  const { refresh } = useWorkspace()
   const navigate = useNavigate()
+  const location = useLocation()
+  const onboarding = Boolean((location.state as { onboarding?: boolean } | null)?.onboarding)
+
   const [title, setTitle] = useState('')
   const [type, setType] = useState('Site vitrine')
   const [needs, setNeeds] = useState<Need[]>([])
@@ -31,19 +34,6 @@ export default function ClientNewRequestPage() {
   const [loading, setLoading] = useState(false)
 
   if (!user) return null
-
-  if (!isApiMode()) {
-    return (
-      <div className="client-section">
-        <p className="client-muted">
-          Les demandes en ligne nécessitent l’API de production. Configurez <code>VITE_API_BASE_URL</code> sur Netlify.
-        </p>
-        <Link to="/#contact" className="btn-primary mt-4 inline-flex">
-          Formulaire du site
-        </Link>
-      </div>
-    )
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,17 +49,16 @@ export default function ClientNewRequestPage() {
 
     setLoading(true)
     try {
-      const result = await submitClientProjectRequest({
+      const result = await submitClientRequest(user, {
         title: title.trim(),
         type: type.trim() || 'Site web',
         message: message.trim(),
         needs: needs.length ? [...needs] : undefined,
       })
-      applyWorkspaceProjects(result.projects)
-      await syncWorkspace()
+      refresh()
       navigate(`/espace-client/projets/${result.projectId}`, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Envoi impossible.')
+      setError(err instanceof Error ? err.message : 'Envoi impossible. Vérifiez que l’API tourne (npm run dev:api).')
     } finally {
       setLoading(false)
     }
@@ -82,7 +71,9 @@ export default function ClientNewRequestPage() {
           <p className="client-page-eyebrow">Demande</p>
           <h1 className="client-page-title">Déposer une demande de projet</h1>
           <p className="client-page-subtitle">
-            Décrivez votre besoin : l’équipe Sirius est notifiée par email et vous recontacte sous 48 h ouvrées.
+            {onboarding
+              ? 'Dernière étape : décrivez votre besoin pour lancer votre accompagnement avec Sirius.'
+              : 'L’équipe Sirius est notifiée et vous recontacte sous 48 h ouvrées.'}
           </p>
         </div>
       </header>
@@ -153,9 +144,11 @@ export default function ClientNewRequestPage() {
               </>
             )}
           </button>
-          <Link to="/espace-client/projets" className="client-link inline-flex items-center gap-1">
-            Annuler <ArrowRight size={14} />
-          </Link>
+          {!onboarding && (
+            <Link to="/espace-client/projets" className="client-link inline-flex items-center gap-1">
+              Annuler <ArrowRight size={14} />
+            </Link>
+          )}
         </div>
       </form>
     </>

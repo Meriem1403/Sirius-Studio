@@ -17,6 +17,8 @@ services:
   api:
     build: ./server
     restart: unless-stopped
+    ports:
+      - '3001:3001'
     environment:
       PORT: 3001
       DATABASE_URL: postgresql://sirius:sirius@db:5432/sirius

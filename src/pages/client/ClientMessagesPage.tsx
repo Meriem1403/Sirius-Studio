@@ -36,6 +36,9 @@ export default function ClientMessagesPage() {
         const projs = await fetchApiProjects()
         if (cancelled) return
         setProjects(projs)
+        if (projs.length === 1 && activeProject === 'all') {
+          setActiveProject(projs[0].id)
+        }
         const msgs = await fetchMessages(activeProject === 'all' ? undefined : activeProject)
         if (cancelled) return
         setMessages(msgs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()))
@@ -43,7 +46,11 @@ export default function ClientMessagesPage() {
         return
       }
 
-      setProjects(getProjectsForUser(user.id))
+      const userProjects = getProjectsForUser(user.id)
+      setProjects(userProjects)
+      if (userProjects.length === 1 && activeProject === 'all') {
+        setActiveProject(userProjects[0].id)
+      }
       const local =
         activeProject === 'all'
           ? getMessagesForUser(user.id)
@@ -80,8 +87,20 @@ export default function ClientMessagesPage() {
         </div>
       )}
 
-      {messages.length === 0 && activeProject === 'all' ? (
-        <EmptyState icon={MessageSquare} title="Aucun message" description="Sélectionnez un projet pour démarrer une conversation." />
+      {projects.length === 0 ? (
+        <EmptyState
+          icon={MessageSquare}
+          title="Aucun projet"
+          description="Déposez d’abord une demande de projet pour échanger avec l’équipe."
+          actionLabel="Déposer une demande"
+          actionHref="/espace-client/nouvelle-demande"
+        />
+      ) : messages.length === 0 && activeProject === 'all' ? (
+        <EmptyState
+          icon={MessageSquare}
+          title="Aucun message"
+          description="Choisissez un projet ci-dessus pour démarrer une conversation."
+        />
       ) : (
         <div className="client-messages workspace-panel">
           <MessageThread messages={messages} />

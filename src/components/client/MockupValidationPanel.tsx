@@ -36,7 +36,7 @@ export default function MockupValidationPanel({ project }: MockupValidationPanel
     if (!user || submitting) return
     setSubmitting(true)
     try {
-      submitMockupValidation({
+      await submitMockupValidation({
         projectId: project.id,
         client: user,
         choice,
