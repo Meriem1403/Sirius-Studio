@@ -298,12 +298,12 @@ export default function JourneyPaths() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
-                    <a href="#contact" className="btn-primary w-full sm:w-auto shrink-0">
+                    <a href="/demande-maquette" className="btn-primary w-full sm:w-auto shrink-0">
                       <CtaIcon size={16} />
                       Demander ma maquette gratuite
                     </a>
                     <a
-                      href="#contact"
+                      href="/demande-maquette"
                       className="btn-secondary w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2"
                     >
                       Parler de mon projet

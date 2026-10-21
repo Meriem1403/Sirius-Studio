@@ -7,7 +7,7 @@ const navigation = [
   { label: 'Transformations', href: '#transformations' },
   { label: 'Processus', href: '#processus' },
   { label: 'Expertise', href: '#services' },
-  { label: 'Commencer', href: '#contact' },
+  { label: 'Commencer', href: '/demande-maquette' },
 ]
 
 const expertise = [
@@ -40,9 +40,9 @@ export default function Footer() {
               produit final.
             </p>
             <div className="flex flex-col gap-2.5 mt-6">
-              <a href="#contact" className="footer-contact-link">
+              <a href="/demande-maquette" className="footer-contact-link">
                 <Mail size={14} strokeWidth={1.75} />
-                Formulaire de contact
+                Demander une maquette
               </a>
               <span className="footer-contact-link footer-contact-link--static">
                 <MapPin size={14} strokeWidth={1.75} />

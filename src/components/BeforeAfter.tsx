@@ -425,7 +425,7 @@ export default function BeforeAfter() {
               </div>
 
               <a
-                href="#contact"
+                href="/demande-maquette"
                 className="btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 Obtenir ma maquette gratuite

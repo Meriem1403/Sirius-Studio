@@ -32,7 +32,12 @@ export default function LoginPage() {
   const [oauthError, setOauthError] = useState('')
 
   useEffect(() => {
-    if (searchParams.get('oauth_error') === '1') {
+    if (searchParams.get('oauth_error') === 'not_configured') {
+      const p = searchParams.get('provider') ?? 'OAuth'
+      setOauthError(
+        `Connexion ${p} : ajoutez les clés OAuth sur le serveur (voir PRODUCTION.md). En attendant, utilisez email et mot de passe.`,
+      )
+    } else if (searchParams.get('oauth_error') === '1') {
       setOauthError('Connexion Google / Apple impossible. Réessayez ou utilisez email et mot de passe.')
     } else if (searchParams.get('oauth_error') === 'apple_setup') {
       setOauthError('Sign in with Apple nécessite une configuration Apple Developer sur le serveur.')

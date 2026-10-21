@@ -152,7 +152,7 @@ export default function Services() {
                   </div>
 
                   <a
-                    href="#contact"
+                    href="/demande-maquette"
                     className="inline-flex items-center gap-1.5 text-sm text-white/45 hover:text-white/80 transition-colors duration-300 group/link"
                   >
                     En parler

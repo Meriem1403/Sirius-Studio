@@ -188,7 +188,10 @@ oauthRoutes.get('/:provider/start', async (c) => {
   const provider = c.req.param('provider') as Provider
   if (!PROVIDERS.includes(provider)) return c.json({ error: 'Provider inconnu.' }, 404)
   if (!providerConfigured(provider)) {
-    return c.json({ error: `${provider} n'est pas configuré sur le serveur.` }, 503)
+    const fail = new URL('/connexion', config.publicAppUrl)
+    fail.searchParams.set('oauth_error', 'not_configured')
+    fail.searchParams.set('provider', provider)
+    return c.redirect(fail.toString(), 302)
   }
 
   const nextRaw = c.req.query('next') ?? '/espace-client/nouvelle-demande'

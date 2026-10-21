@@ -12,22 +12,13 @@ echo "→ Register test client"
 EMAIL="test-client-$(date +%s)@sirius.local"
 REG=$(curl -sf -X POST "$BASE/auth/register" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"Test Client\",\"email\":\"$EMAIL\",\"password\":\"TestClient2026!\"}")
+  -d "{\"name\":\"Test Client\",\"email\":\"$EMAIL\",\"password\":\"TestClient2026!\",\"projectRequest\":{\"title\":\"Projet test local\",\"type\":\"Site vitrine\",\"message\":\"Message de test parcours client minimum dix caractères.\"}}")
 TOKEN=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+PROJECT_ID=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin).get('projectId',''))")
 
-echo "→ Workspace (0 projet attendu)"
-COUNT=$(curl -sf "$BASE/workspace/state" -H "Authorization: Bearer $TOKEN" \
-  | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('projects',[])))")
-test "$COUNT" = "0" && echo "  OK aucun projet"
-
-echo "→ Déposer une demande"
-curl -sf -X POST "$BASE/requests" -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"Projet test local","type":"Site vitrine","message":"Message de test parcours client minimum dix caractères."}' \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('projectId'); print('  projet', d['projectId'])"
-
-echo "→ Workspace (1 projet)"
+echo "→ Inscription + demande maquette (1 projet attendu)"
 curl -sf "$BASE/workspace/state" -H "Authorization: Bearer $TOKEN" \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); assert len(d.get('projects',[]))==1; print('  OK')"
+  | python3 -c "import sys,json; d=json.load(sys.stdin); assert len(d.get('projects',[]))==1; print('  projet', d['projects'][0]['id'])"
+test -n "$PROJECT_ID" && echo "  projectId API OK"
 
 echo "OK — parcours client API"

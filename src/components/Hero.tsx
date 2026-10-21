@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { SIGNUP_MAQUETTE_URL } from '../lib/auth/maquetteEntry'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import OrbitalRings from './OrbitalRings'
 import HeroVisual from './HeroVisual'
@@ -60,9 +62,9 @@ export default function Hero() {
               transition={{ duration: 0.8, delay: 0.55 }}
               className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 w-full sm:w-auto mb-2 sm:mb-0"
             >
-              <a href="#contact" className="btn-primary w-full sm:w-auto shrink-0">
+              <Link to={SIGNUP_MAQUETTE_URL} className="btn-primary w-full sm:w-auto shrink-0">
                 Demander ma maquette gratuite
-              </a>
+              </Link>
               <a href="#parcours" className="btn-secondary w-full sm:w-auto shrink-0">
                 Découvrir le parcours
                 <ArrowRight size={16} strokeWidth={2} />

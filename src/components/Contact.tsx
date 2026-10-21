@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { DEFAULT_AUTH_NEXT } from '../lib/auth/postAuthRedirect'
+import { LOGIN_MAQUETTE_URL, SIGNUP_MAQUETTE_URL } from '../lib/auth/maquetteEntry'
 
 export default function Contact() {
-  const signupHref = `/inscription?next=${encodeURIComponent(DEFAULT_AUTH_NEXT)}`
-  const loginHref = `/connexion?next=${encodeURIComponent(DEFAULT_AUTH_NEXT)}`
 
   return (
     <section id="contact" className="section-wrap relative overflow-hidden">
@@ -31,14 +29,14 @@ export default function Contact() {
             <span className="glow-text">gratuitement.</span>
           </h2>
           <p className="text-white/40 text-lg xl:text-xl max-w-xl mx-auto mb-8">
-            Créez d&apos;abord votre compte (Google, Apple, Microsoft, GitHub ou email). Vous déposerez ensuite{' '}
-            <strong className="text-white/70">une seule demande de projet</strong> dans votre espace client.
+            Compte obligatoire. Sur la page suivante : Google, Apple, Microsoft, GitHub ou email,{' '}
+            <strong className="text-white/70">plus votre demande de maquette</strong> en un seul formulaire.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to={signupHref} className="btn-primary inline-flex justify-center">
-              Créer mon compte
+            <Link to={SIGNUP_MAQUETTE_URL} className="btn-primary inline-flex justify-center">
+              Demander ma maquette
             </Link>
-            <Link to={loginHref} className="btn-secondary inline-flex justify-center">
+            <Link to={LOGIN_MAQUETTE_URL} className="btn-secondary inline-flex justify-center">
               J&apos;ai déjà un compte
             </Link>
           </div>

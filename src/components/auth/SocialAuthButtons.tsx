@@ -54,10 +54,6 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
 
     try {
       if (apiMode) {
-        if (!available.includes(provider)) {
-          setError(`${providers.find((p) => p.id === provider)?.label ?? provider} n'est pas encore activé côté serveur.`)
-          return
-        }
         startOAuthLogin(provider, next)
         return
       }
@@ -78,16 +74,16 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
     <div className="auth-social">
       <div className="auth-social-grid">
         {providers.map(({ id, label, icon: Icon, iconClass }) => {
-          const disabled = apiMode && !available.includes(id)
+          const configured = !apiMode || available.includes(id)
           return (
             <button
               key={id}
               type="button"
-              className={`auth-social-btn ${disabled ? 'auth-social-btn--disabled' : ''}`}
+              className={`auth-social-btn ${!configured ? 'auth-social-btn--pending' : ''}`}
               onClick={() => handleSocial(id)}
-              disabled={!!loading || disabled}
+              disabled={!!loading}
               aria-busy={loading === id}
-              title={disabled ? 'Configurez ce fournisseur sur le serveur (OAuth)' : undefined}
+              title={!configured ? 'Connexion disponible dès configuration OAuth sur le serveur' : undefined}
             >
               {loading === id ? (
                 <span className="auth-spinner" aria-hidden="true" />

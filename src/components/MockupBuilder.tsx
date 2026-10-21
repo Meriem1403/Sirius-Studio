@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { SIGNUP_MAQUETTE_URL } from '../lib/auth/maquetteEntry'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, FileText, Sparkles } from 'lucide-react'
 import { CtaIcon } from './icons'
@@ -100,10 +102,10 @@ export default function MockupBuilder() {
               transition={{ delay: 0.5 }}
               className="pt-4"
             >
-              <a href="#contact" className="btn-primary inline-flex items-center gap-2">
+              <Link to={SIGNUP_MAQUETTE_URL} className="btn-primary inline-flex items-center gap-2">
                 <CtaIcon size={16} />
                 Lancer ma maquette gratuite
-              </a>
+              </Link>
             </motion.div>
           </div>
 
