@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { AppleIcon, GitHubIcon, GoogleIcon, MicrosoftIcon } from './socialIcons'
 import { FIXTURE_SOCIAL_MAP } from '../../fixtures/users'
 import { useAuth } from '../../context/AuthContext'
+import { isApiMode } from '../../lib/api/config'
 
 export type SocialProvider = keyof typeof FIXTURE_SOCIAL_MAP
 
@@ -28,6 +29,14 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
   const navigate = useNavigate()
   const [loading, setLoading] = useState<SocialProvider | null>(null)
   const [error, setError] = useState('')
+
+  if (isApiMode()) {
+    return (
+      <p className="auth-social-notice">
+        Connexion par email et mot de passe (production). OAuth sera ajouté ultérieurement.
+      </p>
+    )
+  }
 
   const handleSocial = async (provider: SocialProvider) => {
     setLoading(provider)

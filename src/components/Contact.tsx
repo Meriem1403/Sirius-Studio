@@ -140,7 +140,9 @@ export default function Contact() {
       return
     }
 
-    setSubmitted(true)
+    setSubmitError(
+      'Le site n’est pas connecté à l’API : configurez VITE_API_BASE_URL sur Netlify pour envoyer de vraies demandes.',
+    )
   }
 
   const companyProvided = form.company.trim().length > 0

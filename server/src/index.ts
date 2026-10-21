@@ -11,6 +11,7 @@ import { contactRoutes } from './routes/contact.js'
 import { messageRoutes } from './routes/messages.js'
 import { prospectRoutes } from './routes/prospects.js'
 import { clientRoutes } from './routes/clients.js'
+import { requestRoutes } from './routes/requests.js'
 
 const app = new Hono()
 
@@ -24,12 +25,20 @@ app.use(
   }),
 )
 
-app.get('/health', (c) => c.json({ ok: true, service: 'sirius-api' }))
+app.get('/health', (c) =>
+  c.json({
+    ok: true,
+    service: 'sirius-api',
+    email: config.resendApiKey ? 'resend' : 'simulated',
+    publicAppUrl: config.publicAppUrl,
+  }),
+)
 app.route('/auth', authRoutes)
 app.route('/contact', contactRoutes)
 app.route('/messages', messageRoutes)
 app.route('/prospects', prospectRoutes)
 app.route('/clients', clientRoutes)
+app.route('/requests', requestRoutes)
 app.route('/workspace', workspaceRoutes)
 
 async function main() {

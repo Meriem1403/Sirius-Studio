@@ -100,7 +100,12 @@ export default function ClientDashboardPage() {
           {activeProjects.length > 0 ? (
             activeProjects.map((p) => <ProjectCard key={p.id} project={p} />)
           ) : (
-            <p className="client-muted">Aucun projet actif pour le moment.</p>
+            <p className="client-muted">
+              Aucun projet actif.{' '}
+              <Link to="/espace-client/nouvelle-demande" className="client-link">
+                Déposer une demande
+              </Link>
+            </p>
           )}
         </div>
       </section>

@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  PlusCircle,
   User,
 } from 'lucide-react'
 import { useWorkspace } from '../../context/WorkspaceContext'
@@ -21,6 +22,7 @@ import { userInitials } from '../../lib/client/format'
 const navMain = [
   { to: '/espace-client', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
   { to: '/espace-client/projets', label: 'Mes projets', icon: FolderKanban, end: false },
+  { to: '/espace-client/nouvelle-demande', label: 'Nouvelle demande', icon: PlusCircle, end: false },
   { to: '/espace-client/messages', label: 'Messages', icon: MessageSquare, end: false, badge: 'messages' as const },
   { to: '/espace-client/documents', label: 'Documents', icon: FileText, end: false, badge: 'docs' as const },
   { to: '/espace-client/facturation', label: 'Devis & factures', icon: CreditCard, end: false, badge: 'billing' as const },

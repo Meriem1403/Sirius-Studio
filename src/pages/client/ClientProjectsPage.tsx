@@ -30,9 +30,9 @@ export default function ClientProjectsPage() {
         <EmptyState
           icon={FolderKanban}
           title="Aucun projet"
-          description="Vos projets apparaîtront ici dès qu'un accompagnement sera lancé avec Sirius Studio."
-          actionLabel="Retour au tableau de bord"
-          actionHref="/espace-client"
+          description="Déposez une demande en ligne : un projet est créé, l'équipe est notifiée par email et vous suit dans cet espace."
+          actionLabel="Déposer une demande"
+          actionHref="/espace-client/nouvelle-demande"
         />
       ) : (
         <>

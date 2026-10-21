@@ -30,15 +30,32 @@
 
 ---
 
-## Phase 3 — Resend (e-mails)
+## Phase 3 — Resend (e-mails) — **obligatoire pour une vraie prod**
+
+Sans cette étape, **aucun mail n’arrive dans votre boîte** (tout reste dans les logs Docker `api`).
 
 1. Compte [resend.com](https://resend.com)
-2. Vérifier ton **domaine** (SPF/DKIM dans DNS)
-3. Créer une **API key**
-4. `ADMIN_NOTIFY_EMAIL` = ton **Gmail** (tu reçois contact + messages clients)
-5. `MAIL_FROM` = adresse sur ton domaine vérifié chez Resend
+2. Vérifier ton **domaine** (SPF/DKIM dans DNS) — ou utiliser le domaine de test Resend en dev uniquement
+3. Créer une **API key** → `RESEND_API_KEY` dans `.env.production` sur Hetzner
+4. `ADMIN_NOTIFY_EMAIL` = **votre Gmail / boîte pro** (vous recevez : contact site, nouvelles demandes client, messages)
+5. `MAIL_FROM` = adresse **sur le domaine vérifié** chez Resend (ex. `Sirius Studio <contact@votredomaine.fr>`)
 
-Sans `RESEND_API_KEY` : l’app marche, les mails sont simulés dans les logs API.
+Vérifier après deploy :
+
+```bash
+curl -s https://VOTRE-API/health | grep resend
+# doit afficher "email":"resend" et non "simulated"
+```
+
+### Qui reçoit quoi
+
+| Événement | Destinataire |
+|-----------|----------------|
+| Formulaire contact (accueil) | Admin + accusé réception au visiteur |
+| Inscription client (+ demande optionnelle) | Bienvenue client + admin si demande |
+| Demande depuis l’espace client (`/nouvelle-demande`) | Admin + confirmation client |
+| Message client → admin | Admin |
+| Réponse admin → client | Client |
 
 ---
 
@@ -61,8 +78,11 @@ Résumé :
 ## Phase 5 — Validation prod
 
 - [ ] Site Netlify → connexion admin
-- [ ] Projets / facturation / agenda visibles
-- [ ] Formulaire contact → prospect admin + mail Gmail (si Resend)
+- [ ] `VITE_API_BASE_URL` défini (sinon mode démo localStorage)
+- [ ] `/health` → `"email":"resend"`
+- [ ] Inscription `/inscription` avec demande → projet visible client + admin
+- [ ] Espace client → **Nouvelle demande** → projet + email admin
+- [ ] Formulaire contact → prospect admin + mails admin/client
 - [ ] Message client → mail admin ; réponse admin → mail client
 - [ ] `SEED_ON_START=false` après init
 

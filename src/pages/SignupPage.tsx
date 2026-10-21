@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Building2, Lock, Mail, User } from 'lucide-react'
+import { ArrowRight, Building2, FileText, Layers, Lock, Mail, User } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthField from '../components/auth/AuthField'
 import PasswordStrength from '../components/auth/PasswordStrength'
 import SocialAuthButtons from '../components/auth/SocialAuthButtons'
 import { useAuth } from '../context/AuthContext'
+import { isApiMode } from '../lib/api/config'
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -22,8 +23,13 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [terms, setTerms] = useState(false)
+  const [withProject, setWithProject] = useState(true)
+  const [projectTitle, setProjectTitle] = useState('')
+  const [projectType, setProjectType] = useState('Site vitrine')
+  const [projectMessage, setProjectMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+  const apiMode = isApiMode()
 
   if (isAuthenticated) {
     return <Navigate to="/espace-client" replace />
@@ -40,6 +46,10 @@ export default function SignupPage() {
     else if (password.length < 8) next.password = '8 caractères minimum'
     if (password !== confirmPassword) next.confirmPassword = 'Les mots de passe ne correspondent pas'
     if (!terms) next.terms = 'Vous devez accepter les conditions'
+    if (apiMode && withProject) {
+      if (projectTitle.trim().length < 3) next.projectTitle = 'Titre du projet requis (3 car. min.)'
+      if (projectMessage.trim().length < 10) next.projectMessage = 'Décrivez votre besoin (10 car. min.)'
+    }
 
     setErrors(next)
     if (Object.keys(next).length) return
@@ -48,7 +58,20 @@ export default function SignupPage() {
     setErrors({})
 
     try {
-      await register({ name, email, password, company: company || undefined })
+      await register({
+        name,
+        email,
+        password,
+        company: company || undefined,
+        projectRequest:
+          apiMode && withProject
+            ? {
+                title: projectTitle.trim(),
+                type: projectType.trim() || 'Site vitrine',
+                message: projectMessage.trim(),
+              }
+            : undefined,
+      })
       navigate('/espace-client', { replace: true })
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : 'Inscription impossible.' })
@@ -170,6 +193,56 @@ export default function SignupPage() {
             </span>
           </label>
           {errors.terms && <span className="auth-field-error auth-field-error--block">{errors.terms}</span>}
+
+          {apiMode && (
+            <div className="auth-project-block">
+              <label className="auth-checkbox">
+                <input
+                  type="checkbox"
+                  checked={withProject}
+                  onChange={(e) => setWithProject(e.target.checked)}
+                />
+                <span className="auth-checkbox-box" />
+                <span>Déposer ma demande de projet dès l&apos;inscription (recommandé)</span>
+              </label>
+              {withProject && (
+                <div className="auth-project-fields">
+                  <AuthField
+                    id="signup-project-title"
+                    label="Titre du projet"
+                    name="projectTitle"
+                    icon={FileText}
+                    placeholder="Ex. Site vitrine"
+                    value={projectTitle}
+                    onChange={setProjectTitle}
+                    error={errors.projectTitle}
+                  />
+                  <AuthField
+                    id="signup-project-type"
+                    label="Type"
+                    name="projectType"
+                    icon={Layers}
+                    placeholder="Site vitrine"
+                    value={projectType}
+                    onChange={setProjectType}
+                  />
+                  <label className="auth-field">
+                    <span className="auth-field-label">Votre besoin</span>
+                    <textarea
+                      className="auth-field-input auth-field-textarea"
+                      rows={4}
+                      value={projectMessage}
+                      onChange={(e) => setProjectMessage(e.target.value)}
+                      placeholder="Décrivez votre projet…"
+                    />
+                    {errors.projectMessage && (
+                      <span className="auth-field-error">{errors.projectMessage}</span>
+                    )}
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
 
           <button type="submit" className="btn-primary auth-submit w-full" disabled={loading}>
             {loading ? (

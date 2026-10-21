@@ -31,6 +31,7 @@ import AdminBillingPage from './pages/admin/AdminBillingPage'
 import AdminAgendaPage from './pages/admin/AdminAgendaPage'
 import ClientBillingPage from './pages/client/ClientBillingPage'
 import ClientAgendaPage from './pages/client/ClientAgendaPage'
+import ClientNewRequestPage from './pages/client/ClientNewRequestPage'
 
 export default function App() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
                 >
                   <Route index element={<ClientDashboardPage />} />
                   <Route path="projets" element={<ClientProjectsPage />} />
+                  <Route path="nouvelle-demande" element={<ClientNewRequestPage />} />
                   <Route path="projets/:id" element={<ClientProjectDetailPage />} />
                   <Route path="messages" element={<ClientMessagesPage />} />
                   <Route path="documents" element={<ClientDocumentsPage />} />

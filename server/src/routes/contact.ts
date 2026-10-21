@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { pool, uid } from '../db.js'
-import { notifyAdminNewLead } from '../services/email.js'
+import { notifyAdminNewLead, notifyClientContactReceived } from '../services/email.js'
 import { pushAdminNotification } from '../services/adminNotify.js'
 
 const contactSchema = z.object({
@@ -63,6 +63,8 @@ contactRoutes.post('/', async (c) => {
     body: `${company}${data.phone ? ` · ${data.phone.trim()}` : ''}`,
     link: '/espace-admin/prospection',
   })
+
+  await notifyClientContactReceived({ to: data.email.trim(), name: data.name.trim() })
 
   return c.json({ ok: true, prospectId }, 201)
 })

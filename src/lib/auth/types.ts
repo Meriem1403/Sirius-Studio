@@ -15,12 +15,20 @@ export interface Session {
   createdAt: string
 }
 
+export interface RegisterProjectRequest {
+  title: string
+  type: string
+  message: string
+  needs?: string[]
+}
+
 export interface RegisterInput {
   name: string
   email: string
   password: string
   company?: string
   phone?: string
+  projectRequest?: RegisterProjectRequest
 }
 
 export interface NotificationPrefs {
