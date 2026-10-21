@@ -16,7 +16,7 @@ interface AuthContextValue {
   isLoading: boolean
   login: (email: string, password: string, remember?: boolean) => Promise<void>
   loginSocial: (email: string) => Promise<void>
-  register: (input: RegisterInput) => Promise<void>
+  register: (input: RegisterInput) => Promise<User>
   logout: () => void
 }
 
@@ -51,8 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const register = useCallback(async (input: RegisterInput) => {
-    await registerAccount(input)
+    const user = await registerAccount(input)
     setSession(getSession())
+    return user
   }, [])
 
   const logout = useCallback(() => {

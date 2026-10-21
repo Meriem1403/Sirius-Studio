@@ -47,6 +47,18 @@ curl -s https://VOTRE-API/health | grep resend
 # doit afficher "email":"resend" et non "simulated"
 ```
 
+## Phase 3b — Connexion Google / GitHub / Microsoft
+
+1. **Google Cloud Console** → OAuth client **Web**
+   - Authorized redirect URI : `https://VOTRE-API/auth/oauth/google/callback`
+2. Sur Hetzner `.env.production` :
+   - `OAUTH_REDIRECT_BASE=https://VOTRE-API` (même host que l’API, sans slash)
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+3. Même principe pour GitHub / Microsoft (redirect `/auth/oauth/github/callback`, etc.)
+4. **Apple** : compte Apple Developer + Service ID (configuration serveur `APPLE_*`) — bouton actif quand les variables sont présentes.
+
+Après deploy : les boutons Google/GitHub/Microsoft sur **Inscription** et **Connexion** redirigent vers le fournisseur, puis vers `/auth/callback` sur Netlify avec session ouverte → **formulaire de demande** si aucun projet.
+
 ### Qui reçoit quoi
 
 | Événement | Destinataire |

@@ -1,12 +1,18 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AppleIcon, GitHubIcon, GoogleIcon, MicrosoftIcon } from './socialIcons'
 import { FIXTURE_SOCIAL_MAP } from '../../fixtures/users'
 import { useAuth } from '../../context/AuthContext'
 import { isApiMode } from '../../lib/api/config'
+import {
+  fetchConfiguredOAuthProviders,
+  startOAuthLogin,
+  type SocialProvider,
+} from '../../lib/api/oauth'
+import { DEFAULT_AUTH_NEXT } from '../../lib/auth/postAuthRedirect'
 
-export type SocialProvider = keyof typeof FIXTURE_SOCIAL_MAP
+export type { SocialProvider }
 
 const providers: {
   id: SocialProvider
@@ -27,22 +33,35 @@ interface SocialAuthButtonsProps {
 export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
   const { loginSocial } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState<SocialProvider | null>(null)
   const [error, setError] = useState('')
+  const [available, setAvailable] = useState<SocialProvider[]>([])
+  const apiMode = isApiMode()
 
-  if (isApiMode()) {
-    return (
-      <p className="auth-social-notice">
-        Connexion par email et mot de passe (production). OAuth sera ajouté ultérieurement.
-      </p>
-    )
-  }
+  const next =
+    searchParams.get('next') ??
+    (mode === 'signup' ? DEFAULT_AUTH_NEXT : '/espace-client')
+
+  useEffect(() => {
+    if (!apiMode) return
+    fetchConfiguredOAuthProviders().then(setAvailable)
+  }, [apiMode])
 
   const handleSocial = async (provider: SocialProvider) => {
     setLoading(provider)
     setError('')
 
     try {
+      if (apiMode) {
+        if (!available.includes(provider)) {
+          setError(`${providers.find((p) => p.id === provider)?.label ?? provider} n'est pas encore activé côté serveur.`)
+          return
+        }
+        startOAuthLogin(provider, next)
+        return
+      }
+
       const email = FIXTURE_SOCIAL_MAP[provider]
       await loginSocial(email)
       navigate('/espace-client', { replace: true })
@@ -58,27 +77,37 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
   return (
     <div className="auth-social">
       <div className="auth-social-grid">
-        {providers.map(({ id, label, icon: Icon, iconClass }) => (
-          <button
-            key={id}
-            type="button"
-            className="auth-social-btn"
-            onClick={() => handleSocial(id)}
-            disabled={!!loading}
-            aria-busy={loading === id}
-          >
-            {loading === id ? (
-              <span className="auth-spinner" aria-hidden="true" />
-            ) : (
-              <Icon className={`auth-social-icon ${iconClass ?? ''}`} />
-            )}
-            <span className="auth-social-label">
-              <span className="hidden sm:inline">{verb} </span>
-              {label}
-            </span>
-          </button>
-        ))}
+        {providers.map(({ id, label, icon: Icon, iconClass }) => {
+          const disabled = apiMode && !available.includes(id)
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`auth-social-btn ${disabled ? 'auth-social-btn--disabled' : ''}`}
+              onClick={() => handleSocial(id)}
+              disabled={!!loading || disabled}
+              aria-busy={loading === id}
+              title={disabled ? 'Configurez ce fournisseur sur le serveur (OAuth)' : undefined}
+            >
+              {loading === id ? (
+                <span className="auth-spinner" aria-hidden="true" />
+              ) : (
+                <Icon className={`auth-social-icon ${iconClass ?? ''}`} />
+              )}
+              <span className="auth-social-label">
+                <span className="hidden sm:inline">{verb} </span>
+                {label}
+              </span>
+            </button>
+          )
+        })}
       </div>
+
+      {apiMode && available.length === 0 && (
+        <p className="auth-social-notice">
+          Connexion Google / Apple : ajoutez les clés OAuth sur le serveur (voir PRODUCTION.md). En attendant, utilisez email et mot de passe.
+        </p>
+      )}
 
       <AnimatePresence>
         {error && (

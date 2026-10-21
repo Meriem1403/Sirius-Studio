@@ -11,6 +11,7 @@ import { WorkspaceProvider } from './context/WorkspaceContext'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 import ClientLayout from './pages/client/ClientLayout'
 import ClientDashboardPage from './pages/client/ClientDashboardPage'
 import ClientProjectsPage from './pages/client/ClientProjectsPage'
@@ -52,6 +53,7 @@ export default function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/connexion" element={<LoginPage />} />
                 <Route path="/inscription" element={<SignupPage />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route
                   path="/espace-client"
                   element={

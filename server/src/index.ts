@@ -12,6 +12,7 @@ import { messageRoutes } from './routes/messages.js'
 import { prospectRoutes } from './routes/prospects.js'
 import { clientRoutes } from './routes/clients.js'
 import { requestRoutes } from './routes/requests.js'
+import { oauthRoutes } from './routes/oauth.js'
 
 const app = new Hono()
 
@@ -34,6 +35,7 @@ app.get('/health', (c) =>
   }),
 )
 app.route('/auth', authRoutes)
+app.route('/auth/oauth', oauthRoutes)
 app.route('/contact', contactRoutes)
 app.route('/messages', messageRoutes)
 app.route('/prospects', prospectRoutes)

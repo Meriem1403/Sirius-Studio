@@ -14,4 +14,16 @@ export const config = {
   resendApiKey: process.env.RESEND_API_KEY ?? '',
   publicAppUrl: process.env.PUBLIC_APP_URL ?? 'http://localhost:8080',
   seedOnStart: process.env.SEED_ON_START !== 'false',
+  /** URL publique de l’API (callbacks OAuth), ex. https://api.domaine.fr */
+  oauthRedirectBase: (process.env.OAUTH_REDIRECT_BASE ?? 'http://localhost:3001').replace(/\/$/, ''),
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+  githubClientId: process.env.GITHUB_CLIENT_ID ?? '',
+  githubClientSecret: process.env.GITHUB_CLIENT_SECRET ?? '',
+  microsoftClientId: process.env.MICROSOFT_CLIENT_ID ?? '',
+  microsoftClientSecret: process.env.MICROSOFT_CLIENT_SECRET ?? '',
+  appleClientId: process.env.APPLE_CLIENT_ID ?? '',
+  appleTeamId: process.env.APPLE_TEAM_ID ?? '',
+  appleKeyId: process.env.APPLE_KEY_ID ?? '',
+  applePrivateKey: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n') ?? '',
 }

@@ -354,6 +354,20 @@ body {
   cursor: wait;
 }
 
+.auth-social-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.auth-callback-page {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
 .auth-social-icon {
   width: 1.125rem;
   height: 1.125rem;

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Lock, Mail } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
@@ -8,6 +8,8 @@ import SocialAuthButtons from '../components/auth/SocialAuthButtons'
 import AuthFixturesPanel from '../components/auth/AuthFixturesPanel'
 import { useAuth } from '../context/AuthContext'
 import { getSession } from '../lib/auth/authService'
+import { DEFAULT_AUTH_NEXT, resolveClientPostAuthPath } from '../lib/auth/postAuthRedirect'
+import { getWorkspaceCache } from '../lib/api/workspaceSync'
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -17,7 +19,9 @@ export default function LoginPage() {
   const { login, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from
+  const [searchParams] = useSearchParams()
+  const from =
+    (location.state as { from?: string } | null)?.from ?? searchParams.get('next') ?? undefined
   const defaultDest = user?.role === 'admin' ? '/espace-admin' : '/espace-client'
 
   const [email, setEmail] = useState('')
@@ -25,9 +29,22 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({})
   const [loading, setLoading] = useState(false)
+  const [oauthError, setOauthError] = useState('')
 
-  if (isAuthenticated) {
-    return <Navigate to={from ?? defaultDest} replace />
+  useEffect(() => {
+    if (searchParams.get('oauth_error') === '1') {
+      setOauthError('Connexion Google / Apple impossible. Réessayez ou utilisez email et mot de passe.')
+    } else if (searchParams.get('oauth_error') === 'apple_setup') {
+      setOauthError('Sign in with Apple nécessite une configuration Apple Developer sur le serveur.')
+    }
+  }, [searchParams])
+
+  if (isAuthenticated && user) {
+    const dest =
+      user.role === 'admin'
+        ? from ?? defaultDest
+        : resolveClientPostAuthPath(from, getWorkspaceCache()?.projects ?? [], user.id)
+    return <Navigate to={dest} replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +64,11 @@ export default function LoginPage() {
     try {
       await login(email, password, remember)
       const session = getSession()
-      const dest = from ?? (session?.user.role === 'admin' ? '/espace-admin' : '/espace-client')
+      const u = session?.user
+      const dest =
+        u?.role === 'admin'
+          ? from ?? '/espace-admin'
+          : resolveClientPostAuthPath(from, getWorkspaceCache()?.projects ?? [], u!.id)
       navigate(dest, { replace: true })
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : 'Connexion impossible.' })
@@ -74,6 +95,12 @@ export default function LoginPage() {
         <AuthFixturesPanel onSelect={fillFixture} />
 
         <SocialAuthButtons mode="login" />
+
+        {oauthError && (
+          <p className="auth-form-error mt-2" role="alert">
+            {oauthError}
+          </p>
+        )}
 
         <div className="auth-divider">
           <span>ou avec votre email</span>
@@ -152,7 +179,7 @@ export default function LoginPage() {
 
         <p className="auth-switch">
           Pas encore de compte ?{' '}
-          <Link to="/inscription">Créer un compte</Link>
+          <Link to={`/inscription?next=${encodeURIComponent(from ?? DEFAULT_AUTH_NEXT)}`}>Créer un compte</Link>
         </p>
       </motion.div>
     </AuthLayout>

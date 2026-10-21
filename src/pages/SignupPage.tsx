@@ -1,21 +1,24 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Building2, FileText, Layers, Lock, Mail, User } from 'lucide-react'
+import { ArrowRight, Building2, Lock, Mail, User } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthField from '../components/auth/AuthField'
 import PasswordStrength from '../components/auth/PasswordStrength'
 import SocialAuthButtons from '../components/auth/SocialAuthButtons'
 import { useAuth } from '../context/AuthContext'
-import { isApiMode } from '../lib/api/config'
+import { getWorkspaceCache } from '../lib/api/workspaceSync'
+import { DEFAULT_AUTH_NEXT, resolveClientPostAuthPath } from '../lib/auth/postAuthRedirect'
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 export default function SignupPage() {
-  const { register, isAuthenticated } = useAuth()
+  const { register, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const nextParam = searchParams.get('next')
 
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
@@ -23,16 +26,12 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [terms, setTerms] = useState(false)
-  const [withProject, setWithProject] = useState(true)
-  const [projectTitle, setProjectTitle] = useState('')
-  const [projectType, setProjectType] = useState('Site vitrine')
-  const [projectMessage, setProjectMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
-  const apiMode = isApiMode()
 
-  if (isAuthenticated) {
-    return <Navigate to="/espace-client" replace />
+  if (isAuthenticated && user) {
+    const dest = resolveClientPostAuthPath(nextParam, getWorkspaceCache()?.projects ?? [], user.id)
+    return <Navigate to={dest} replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,10 +45,6 @@ export default function SignupPage() {
     else if (password.length < 8) next.password = '8 caractères minimum'
     if (password !== confirmPassword) next.confirmPassword = 'Les mots de passe ne correspondent pas'
     if (!terms) next.terms = 'Vous devez accepter les conditions'
-    if (apiMode && withProject) {
-      if (projectTitle.trim().length < 3) next.projectTitle = 'Titre du projet requis (3 car. min.)'
-      if (projectMessage.trim().length < 10) next.projectMessage = 'Décrivez votre besoin (10 car. min.)'
-    }
 
     setErrors(next)
     if (Object.keys(next).length) return
@@ -58,21 +53,10 @@ export default function SignupPage() {
     setErrors({})
 
     try {
-      await register({
-        name,
-        email,
-        password,
-        company: company || undefined,
-        projectRequest:
-          apiMode && withProject
-            ? {
-                title: projectTitle.trim(),
-                type: projectType.trim() || 'Site vitrine',
-                message: projectMessage.trim(),
-              }
-            : undefined,
-      })
-      navigate('/espace-client', { replace: true })
+      const created = await register({ name, email, password, company: company || undefined })
+      const cache = getWorkspaceCache()
+      const dest = resolveClientPostAuthPath(nextParam ?? DEFAULT_AUTH_NEXT, cache?.projects ?? [], created.id)
+      navigate(dest, { replace: true })
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : 'Inscription impossible.' })
     } finally {
@@ -80,13 +64,15 @@ export default function SignupPage() {
     }
   }
 
+  const loginNext = nextParam ?? DEFAULT_AUTH_NEXT
+
   return (
     <AuthLayout>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <p className="auth-form-eyebrow">Inscription</p>
         <h1 className="auth-form-title">Créer votre compte</h1>
         <p className="auth-form-subtitle">
-          Quelques secondes pour rejoindre votre espace client Sirius.
+          Compte obligatoire pour déposer une demande. Ensuite, un seul formulaire de projet dans votre espace client.
         </p>
 
         <SocialAuthButtons mode="signup" />
@@ -194,56 +180,6 @@ export default function SignupPage() {
           </label>
           {errors.terms && <span className="auth-field-error auth-field-error--block">{errors.terms}</span>}
 
-          {apiMode && (
-            <div className="auth-project-block">
-              <label className="auth-checkbox">
-                <input
-                  type="checkbox"
-                  checked={withProject}
-                  onChange={(e) => setWithProject(e.target.checked)}
-                />
-                <span className="auth-checkbox-box" />
-                <span>Déposer ma demande de projet dès l&apos;inscription (recommandé)</span>
-              </label>
-              {withProject && (
-                <div className="auth-project-fields">
-                  <AuthField
-                    id="signup-project-title"
-                    label="Titre du projet"
-                    name="projectTitle"
-                    icon={FileText}
-                    placeholder="Ex. Site vitrine"
-                    value={projectTitle}
-                    onChange={setProjectTitle}
-                    error={errors.projectTitle}
-                  />
-                  <AuthField
-                    id="signup-project-type"
-                    label="Type"
-                    name="projectType"
-                    icon={Layers}
-                    placeholder="Site vitrine"
-                    value={projectType}
-                    onChange={setProjectType}
-                  />
-                  <label className="auth-field">
-                    <span className="auth-field-label">Votre besoin</span>
-                    <textarea
-                      className="auth-field-input auth-field-textarea"
-                      rows={4}
-                      value={projectMessage}
-                      onChange={(e) => setProjectMessage(e.target.value)}
-                      placeholder="Décrivez votre projet…"
-                    />
-                    {errors.projectMessage && (
-                      <span className="auth-field-error">{errors.projectMessage}</span>
-                    )}
-                  </label>
-                </div>
-              )}
-            </div>
-          )}
-
           <button type="submit" className="btn-primary auth-submit w-full" disabled={loading}>
             {loading ? (
               <>
@@ -261,7 +197,7 @@ export default function SignupPage() {
 
         <p className="auth-switch">
           Déjà un compte ?{' '}
-          <Link to="/connexion">Se connecter</Link>
+          <Link to={`/connexion?next=${encodeURIComponent(loginNext)}`}>Se connecter</Link>
         </p>
       </motion.div>
     </AuthLayout>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2,
@@ -16,6 +17,7 @@ import type { LucideIcon } from 'lucide-react'
 import { CtaIcon } from './icons'
 import { isApiMode } from '../lib/api/config'
 import { submitContactLead } from '../lib/api/contact'
+import { DEFAULT_AUTH_NEXT } from '../lib/auth/postAuthRedirect'
 
 type Situation = 'existing' | 'idea' | 'unknown'
 
@@ -87,6 +89,10 @@ function formatSiretDisplay(value: string): string {
 }
 
 export default function Contact() {
+  const apiMode = isApiMode()
+  const signupHref = `/inscription?next=${encodeURIComponent(DEFAULT_AUTH_NEXT)}`
+  const loginHref = `/connexion?next=${encodeURIComponent(DEFAULT_AUTH_NEXT)}`
+
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -155,6 +161,33 @@ export default function Contact() {
       : form.situation === 'idea'
         ? 'Décrivez votre idée, vos fonctionnalités clés, votre public et vos inspirations.'
         : 'Présentez votre activité en quelques lignes. Sirius vous proposera une direction claire.'
+
+  if (apiMode) {
+    return (
+      <section id="contact" className="section-wrap relative overflow-hidden">
+        <div className="section-inner relative max-w-3xl text-center">
+          <span className="section-label mb-4">Commencer</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mt-4 mb-4">
+            Recevez votre maquette
+            <br />
+            <span className="glow-text">gratuitement.</span>
+          </h2>
+          <p className="text-white/40 text-lg max-w-xl mx-auto mb-8">
+            Pour envoyer une demande, créez d&apos;abord un compte (Google, Apple, Microsoft, GitHub ou email).
+            Vous remplirez ensuite <strong className="text-white/70">un seul</strong> formulaire de projet dans votre espace client.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to={signupHref} className="btn-primary inline-flex justify-center">
+              Créer mon compte
+            </Link>
+            <Link to={loginHref} className="btn-secondary inline-flex justify-center">
+              J&apos;ai déjà un compte
+            </Link>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section id="contact" className="section-wrap relative overflow-hidden">

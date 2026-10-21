@@ -5,18 +5,10 @@ import { uid } from '../db.js'
 import { hashPassword, signToken, verifyPassword } from '../services/auth.js'
 import { requireAuth } from '../middleware/auth.js'
 import { notifyClientWelcome } from '../services/email.js'
-import { createClientProjectRequest } from '../services/clientProjectRequest.js'
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-})
-
-const projectRequestSchema = z.object({
-  title: z.string().min(3).max(120),
-  type: z.string().min(2).max(80),
-  message: z.string().min(10).max(8000),
-  needs: z.array(z.string()).max(12).optional(),
 })
 
 const registerSchema = z.object({
@@ -25,7 +17,6 @@ const registerSchema = z.object({
   password: z.string().min(8),
   company: z.string().optional(),
   phone: z.string().optional(),
-  projectRequest: projectRequestSchema.optional(),
 })
 
 export const authRoutes = new Hono()
@@ -46,7 +37,7 @@ authRoutes.post('/login', async (c) => {
   }>(`SELECT * FROM users WHERE LOWER(email) = $1`, [email])
 
   const row = rows[0]
-  if (!row || !(await verifyPassword(body.data.password, row.password_hash))) {
+  if (!row?.password_hash || !(await verifyPassword(body.data.password, row.password_hash))) {
     return c.json({ error: 'Email ou mot de passe incorrect.' }, 401)
   }
 
@@ -90,22 +81,7 @@ authRoutes.post('/register', async (c) => {
 
   await notifyClientWelcome({ to: user.email, name: user.name })
 
-  let projectId: string | undefined
-  if (body.data.projectRequest) {
-    const created = await createClientProjectRequest(
-      {
-        id,
-        email: user.email,
-        name: user.name,
-        company: user.company ?? null,
-        phone: user.phone ?? null,
-      },
-      { ...body.data.projectRequest, source: 'signup' },
-    )
-    projectId = created.projectId
-  }
-
-  return c.json({ token, user, projectId }, 201)
+  return c.json({ token, user }, 201)
 })
 
 authRoutes.get('/me', requireAuth, (c) => {
