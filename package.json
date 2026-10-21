@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "docker compose up db api",
+    "dev:docker": "docker compose up -d --build",
     "test:client-journey": "bash scripts/test-client-journey.sh",
+    "test:client-journey:docker": "bash scripts/test-client-journey.sh http://localhost:8080/api",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

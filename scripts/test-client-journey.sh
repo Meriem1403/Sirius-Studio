@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Parcours client API local : login → workspace → demande
 set -euo pipefail
+# Docker 8080 : http://localhost:8080/api  |  API seule : http://localhost:3001
 BASE="${1:-http://localhost:3001}"
+BASE="${BASE%/}"
 
 echo "→ Health"
 curl -sf "$BASE/health" | grep -q '"ok":true'

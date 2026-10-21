@@ -1,41 +1,67 @@
-# Développement local (testé)
+# Développement local
 
-## 1. Démarrer l’API + la base
+## Mode Docker (port **8080**) — votre cas
 
-```bash
-docker compose up -d db api
-```
-
-L’API écoute sur **http://localhost:3001** (port exposé dans `docker-compose.yml`).
-
-## 2. Démarrer le front
+Tout tourne dans Docker : site + API + PostgreSQL.
 
 ```bash
-npm run dev
+cd chemin/vers/Sirius
+git pull
+docker compose up -d --build
 ```
 
-Le fichier **`.env.development`** active `VITE_API_BASE_URL=/api` : Vite proxy vers l’API (voir `vite.config.ts`).
+- **Site** : [http://localhost:8080](http://localhost:8080)
+- **API** (via nginx) : [http://localhost:8080/api/health](http://localhost:8080/api/health)
+
+Le front est **compilé dans l’image `web`** avec `VITE_API_BASE_URL=/api`. Nginx envoie `/api/*` vers le conteneur `api` (voir `nginx.conf`).
+
+**Important :** après chaque `git pull`, il faut **`--build`** pour reconstruire le front et l’API. Un simple `docker compose up -d` **ne met pas à jour** le JavaScript → vous voyez l’ancienne version.
+
+```bash
+npm run dev:docker
+# équivalent à : docker compose up -d --build
+```
+
+Test automatique du parcours client via le port 8080 :
+
+```bash
+npm run test:client-journey:docker
+```
+
+Comptes seed (si `SEED_ON_START=true`) :
+
+| Email | Mot de passe |
+|-------|----------------|
+| admin@sirius.studio | Admin2026! |
+| marie@demo.sirius | Demo2026! |
+
+**Nouveau client** (inscription) : pas de projet au départ → redirection **Nouvelle demande** → puis Mes projets / Messages.
+
+**Marie (démo)** : projets déjà en base → pas l’écran « nouvelle demande » au login ; c’est normal.
+
+### Cache navigateur
+
+Si le contact affiche encore l’ancien formulaire après un rebuild : **Cmd+Shift+R** (rechargement forcé) ou fenêtre privée.
+
+---
+
+## Mode Vite seul (port **5173**) — optionnel
+
+Pour le hot-reload sans rebuild Docker :
+
+```bash
+docker compose up -d db api    # API sur localhost:3001
+npm run dev                    # .env.development → proxy /api
+```
 
 Ouvrir **http://localhost:5173**
 
-## 3. Parcours client à vérifier
-
-1. Accueil → section **Contact** : boutons compte (plus de formulaire public).
-2. **Inscription** → redirection **Nouvelle demande** (si aucun projet).
-3. Envoyer la demande → projet visible dans **Mes projets**.
-4. **Messages** : composer sur un projet.
-5. Compte démo seed : `marie@demo.sirius` / `Demo2026!` (projets déjà présents → pas d’étape demande).
-
-## 4. Test automatique API
-
-```bash
-npm run test:client-journey
-```
+---
 
 ## Dépannage
 
-| Symptôme | Cause |
+| Symptôme | Action |
 |----------|--------|
-| Ancien formulaire contact | Redémarrer `npm run dev` après `git pull` |
-| Login / inscription échoue | API arrêtée → `docker compose up -d db api` |
-| Mode démo localStorage | Supprimer `.env.development` ou mettre `VITE_API_BASE_URL=` vide (non recommandé) |
+| Pas de changement UI sur **8080** | `docker compose up -d --build web` (ou tout le stack) |
+| Login / inscription échoue | `docker compose logs api` — BDD prête ? |
+| 502 sur `/api` | `docker compose ps` — conteneur `api` up ? |
