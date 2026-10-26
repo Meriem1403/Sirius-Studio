@@ -12,7 +12,50 @@ export type ClientProjectRequestInput = {
   type: string
   message: string
   needs?: string[]
+  situation?: 'existing' | 'idea' | 'unknown'
+  website?: string
+  objectives?: string[]
+  siret?: string
   source: 'signup' | 'portal' | 'contact'
+}
+
+function buildProjectDescription(input: ClientProjectRequestInput) {
+  const lines = [input.message.trim()]
+  if (input.situation) {
+    const labels = { existing: 'Site existant', idea: 'Idée / besoins', unknown: 'À orienter' } as const
+    lines.push(`Situation : ${labels[input.situation]}`)
+  }
+  if (input.website?.trim()) lines.push(`Site actuel : ${input.website.trim()}`)
+  if (input.needs?.length) lines.push(`Besoins : ${input.needs.join(', ')}`)
+  if (input.objectives?.length) lines.push(`Objectifs : ${input.objectives.join(', ')}`)
+  if (input.siret?.trim()) lines.push(`SIREN/SIRET : ${input.siret.trim()}`)
+  lines.push(`(source: ${input.source})`)
+  return lines.filter(Boolean).join('\n')
+}
+
+async function attachContactLead(
+  prospectId: string,
+  user: { name: string; email: string; company?: string | null; phone?: string | null },
+  input: ClientProjectRequestInput,
+) {
+  const leadId = uid('lead')
+  const payload = {
+    name: user.name,
+    email: user.email,
+    phone: user.phone ?? undefined,
+    company: user.company ?? undefined,
+    siret: input.siret?.trim() || undefined,
+    situation: input.situation ?? 'idea',
+    website: input.website?.trim() || undefined,
+    needs: input.needs ?? [],
+    objectives: input.objectives ?? [],
+    message: input.message.trim(),
+  }
+  await pool.query(`INSERT INTO contact_leads (id, prospect_id, payload) VALUES ($1,$2,$3::jsonb)`, [
+    leadId,
+    prospectId,
+    JSON.stringify(payload),
+  ])
 }
 
 async function ensureProfile(userId: string, phone?: string | null) {
@@ -78,8 +121,7 @@ export async function createClientProjectRequest(
   const projects = (await readCollection('projects')) as Record<string, unknown>[]
   const projectId = uid('proj')
   const today = new Date().toISOString().slice(0, 10)
-  const needsLine = input.needs?.length ? `Besoins : ${input.needs.join(', ')}` : ''
-  const description = [message, needsLine].filter(Boolean).join('\n')
+  const description = buildProjectDescription(input)
 
   const project = {
     id: projectId,
@@ -137,10 +179,11 @@ export async function createClientProjectRequest(
   })
   await writeCollection('notifications', clientNotifications)
 
-  await upsertProspectForUser({
+  const prospectId = await upsertProspectForUser({
     ...user,
-    notes: [message, needsLine, `(source: ${input.source})`].filter(Boolean).join('\n'),
+    notes: description,
   })
+  await attachContactLead(prospectId, user, input)
 
   await notifyAdminNewClientRequest({
     clientName: user.name,

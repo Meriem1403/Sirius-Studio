@@ -8,6 +8,18 @@ export class ApiError extends Error {
   }
 }
 
+export const AUTH_SESSION_EXPIRED_EVENT = 'sirius-auth-session-expired'
+
+function notifySessionExpired() {
+  setAuthToken(null)
+  try {
+    localStorage.removeItem('sirius_session')
+  } catch {
+    /* ignore */
+  }
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED_EVENT))
+}
+
 export function getAuthToken() {
   try {
     return localStorage.getItem(AUTH_TOKEN_KEY)
@@ -31,6 +43,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const data = (await res.json().catch(() => ({}))) as T & { error?: string }
 
   if (!res.ok) {
+    if (res.status === 401 && token) notifySessionExpired()
     throw new ApiError(data.error ?? 'Erreur serveur.', res.status)
   }
 

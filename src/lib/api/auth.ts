@@ -11,12 +11,12 @@ export async function apiLogin(email: string, password: string) {
 }
 
 export async function apiRegister(input: RegisterInput) {
-  const data = await apiFetch<{ token: string; user: User }>('/auth/register', {
+  const data = await apiFetch<{ token: string; user: User; projectId?: string }>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(input),
   })
   setAuthToken(data.token)
-  return data.user
+  return { user: data.user, projectId: data.projectId }
 }
 
 export async function apiMe() {

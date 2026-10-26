@@ -6,17 +6,11 @@ import { hashPassword, signToken, verifyPassword } from '../services/auth.js'
 import { requireAuth } from '../middleware/auth.js'
 import { notifyClientWelcome } from '../services/email.js'
 import { createClientProjectRequest } from '../services/clientProjectRequest.js'
+import { maquetteBriefSchema, resolveBriefTitle, resolveBriefType } from '../schemas/maquetteBrief.js'
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-})
-
-const projectRequestSchema = z.object({
-  title: z.string().min(3).max(120),
-  type: z.string().min(2).max(80),
-  message: z.string().min(10).max(8000),
-  needs: z.array(z.string()).max(12).optional(),
 })
 
 const registerSchema = z.object({
@@ -25,7 +19,8 @@ const registerSchema = z.object({
   password: z.string().min(8),
   company: z.string().optional(),
   phone: z.string().optional(),
-  projectRequest: projectRequestSchema,
+  siret: z.string().optional(),
+  projectRequest: maquetteBriefSchema,
 })
 
 export const authRoutes = new Hono()
@@ -90,6 +85,7 @@ authRoutes.post('/register', async (c) => {
 
   await notifyClientWelcome({ to: user.email, name: user.name })
 
+  const pr = body.data.projectRequest
   const created = await createClientProjectRequest(
     {
       id,
@@ -98,7 +94,17 @@ authRoutes.post('/register', async (c) => {
       company: user.company ?? null,
       phone: user.phone ?? null,
     },
-    { ...body.data.projectRequest, source: 'signup' },
+    {
+      title: resolveBriefTitle(pr, user.company),
+      type: resolveBriefType(pr),
+      message: pr.message.trim(),
+      needs: pr.needs,
+      situation: pr.situation,
+      website: pr.website,
+      objectives: pr.objectives,
+      siret: body.data.siret,
+      source: 'signup',
+    },
   )
 
   return c.json({ token, user, projectId: created.projectId }, 201)

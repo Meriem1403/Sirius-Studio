@@ -45,6 +45,7 @@ services:
       context: .
       args:
         VITE_API_BASE_URL: /api
+        VITE_ENABLE_DEMO_FIXTURES: "true"
     ports:
       - '8080:80'
     restart: unless-stopped

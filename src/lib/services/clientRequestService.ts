@@ -21,13 +21,19 @@ export async function submitClientRequest(user: User, payload: ClientRequestPayl
   }
 
   const today = new Date().toISOString().slice(0, 10)
-  const needsLine = payload.needs?.length ? `Besoins : ${payload.needs.join(', ')}` : ''
-  const description = [payload.message, needsLine].filter(Boolean).join('\n')
+  const title = payload.title ?? payload.needs[0] ?? 'Projet web'
+  const type = payload.type ?? payload.needs[0] ?? 'Site vitrine'
+  const lines = [payload.message]
+  if (payload.situation) lines.push(`Situation : ${payload.situation}`)
+  if (payload.website) lines.push(`Site actuel : ${payload.website}`)
+  if (payload.needs.length) lines.push(`Besoins : ${payload.needs.join(', ')}`)
+  if (payload.objectives?.length) lines.push(`Objectifs : ${payload.objectives.join(', ')}`)
+  const description = lines.filter(Boolean).join('\n')
   const project: ClientProject = {
     id: uid('proj'),
     userId: user.id,
-    title: payload.title,
-    type: payload.type,
+    title,
+    type,
     status: 'en_cours',
     progress: 5,
     updatedAt: today,

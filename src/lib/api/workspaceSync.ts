@@ -17,7 +17,7 @@ import type {
 } from '../auth/types'
 import { STORE_EVENT } from '../data/store'
 import { isApiMode } from './config'
-import { apiFetch } from './http'
+import { ApiError, apiFetch } from './http'
 
 export interface WorkspaceState {
   projects: ClientProject[]
@@ -123,7 +123,8 @@ export function enqueueWorkspacePersist(key: WorkspaceCollectionKey, data: unkno
   })
   persistChain = run.catch(async (err) => {
     console.error('[workspace] persist failed', key, err)
-    await syncWorkspace()
+    if (err instanceof ApiError && err.status === 401) return
+    await syncWorkspace().catch(() => undefined)
   })
   return run
 }

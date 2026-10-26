@@ -1,12 +1,9 @@
 import type { ClientProject } from '../auth/types'
 import { apiFetch } from './http'
 
-export type ClientRequestPayload = {
-  title: string
-  type: string
-  message: string
-  needs?: string[]
-}
+import type { RegisterProjectRequest } from '../auth/types'
+
+export type ClientRequestPayload = RegisterProjectRequest
 
 export async function submitClientProjectRequest(payload: ClientRequestPayload) {
   return apiFetch<{

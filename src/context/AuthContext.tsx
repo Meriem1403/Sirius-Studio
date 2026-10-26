@@ -8,7 +8,10 @@ import {
   registerAccount,
   restoreApiSession,
 } from '../lib/auth/authService'
+import type { RegisterResult } from '../lib/auth/authService'
 import type { RegisterInput, Session, User } from '../lib/auth/types'
+import { AUTH_SESSION_EXPIRED_EVENT } from '../lib/api/http'
+import { clearWorkspaceCache } from '../lib/api/workspaceSync'
 
 interface AuthContextValue {
   user: User | null
@@ -16,7 +19,7 @@ interface AuthContextValue {
   isLoading: boolean
   login: (email: string, password: string, remember?: boolean) => Promise<void>
   loginSocial: (email: string) => Promise<void>
-  register: (input: RegisterInput) => Promise<User>
+  register: (input: RegisterInput) => Promise<RegisterResult>
   logout: () => void
 }
 
@@ -40,6 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    const onExpired = () => {
+      clearWorkspaceCache()
+      setSession(null)
+    }
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, onExpired)
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, onExpired)
+  }, [])
+
   const login = useCallback(async (email: string, password: string, remember = false) => {
     await loginWithCredentials(email, password, remember)
     setSession(getSession())
@@ -51,9 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const register = useCallback(async (input: RegisterInput) => {
-    const user = await registerAccount(input)
+    const result = await registerAccount(input)
     setSession(getSession())
-    return user
+    return result
   }, [])
 
   const logout = useCallback(() => {

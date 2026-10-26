@@ -15,11 +15,16 @@ export interface Session {
   createdAt: string
 }
 
+export type MaquetteSituation = 'existing' | 'idea' | 'unknown'
+
 export interface RegisterProjectRequest {
-  title: string
-  type: string
+  title?: string
+  type?: string
   message: string
-  needs?: string[]
+  needs: string[]
+  situation: MaquetteSituation
+  website?: string
+  objectives?: string[]
 }
 
 export interface RegisterInput {
@@ -28,6 +33,7 @@ export interface RegisterInput {
   password: string
   company?: string
   phone?: string
+  siret?: string
   projectRequest?: RegisterProjectRequest
 }
 

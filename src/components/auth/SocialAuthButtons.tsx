@@ -54,6 +54,12 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
 
     try {
       if (apiMode) {
+        if (!available.includes(provider)) {
+          setError(
+            `Connexion ${provider} : configurez OAuth sur le serveur (PRODUCTION.md), ou utilisez email et mot de passe.`,
+          )
+          return
+        }
         startOAuthLogin(provider, next)
         return
       }
@@ -81,7 +87,7 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
               type="button"
               className={`auth-social-btn ${!configured ? 'auth-social-btn--pending' : ''}`}
               onClick={() => handleSocial(id)}
-              disabled={!!loading}
+              disabled={!!loading || (apiMode && !configured)}
               aria-busy={loading === id}
               title={!configured ? 'Connexion disponible dès configuration OAuth sur le serveur' : undefined}
             >

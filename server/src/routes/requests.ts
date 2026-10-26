@@ -2,13 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth.js'
 import { createClientProjectRequest } from '../services/clientProjectRequest.js'
-
-const requestSchema = z.object({
-  title: z.string().min(3).max(120),
-  type: z.string().min(2).max(80),
-  message: z.string().min(10).max(8000),
-  needs: z.array(z.string()).max(12).optional(),
-})
+import { maquetteBriefSchema, resolveBriefTitle, resolveBriefType } from '../schemas/maquetteBrief.js'
 
 export const requestRoutes = new Hono()
 
@@ -18,9 +12,10 @@ requestRoutes.post('/', requireAuth, async (c) => {
     return c.json({ error: 'Réservé aux comptes client.' }, 403)
   }
 
-  const body = requestSchema.safeParse(await c.req.json())
-  if (!body.success) return c.json({ error: 'Demande invalide. Vérifiez le titre et le message (10 caractères min.).' }, 400)
+  const body = maquetteBriefSchema.safeParse(await c.req.json())
+  if (!body.success) return c.json({ error: 'Demande invalide. Vérifiez vos besoins et votre message.' }, 400)
 
+  const pr = body.data
   const result = await createClientProjectRequest(
     {
       id: user.id,
@@ -30,10 +25,13 @@ requestRoutes.post('/', requireAuth, async (c) => {
       phone: user.phone ?? null,
     },
     {
-      title: body.data.title,
-      type: body.data.type,
-      message: body.data.message,
-      needs: body.data.needs,
+      title: resolveBriefTitle(pr, user.company),
+      type: resolveBriefType(pr),
+      message: pr.message.trim(),
+      needs: pr.needs,
+      situation: pr.situation,
+      website: pr.website,
+      objectives: pr.objectives,
       source: 'portal',
     },
   )

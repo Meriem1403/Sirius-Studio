@@ -4,6 +4,12 @@ export function isApiMode() {
   return Boolean(base && base.length > 0)
 }
 
+/** Comptes démo sur la page connexion — jamais en prod Netlify (voir VITE_ENABLE_DEMO_FIXTURES). */
+export function isDemoFixturesEnabled() {
+  if (import.meta.env.VITE_ENABLE_DEMO_FIXTURES === 'true') return true
+  return import.meta.env.DEV && !isApiMode()
+}
+
 export function apiBaseUrl() {
   if (!base) return ''
   return base.replace(/\/$/, '')

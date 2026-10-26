@@ -139,12 +139,17 @@ export async function loginWithSocial(email: string): Promise<User> {
   return user
 }
 
-export async function registerAccount(input: RegisterInput): Promise<User> {
+export interface RegisterResult {
+  user: User
+  projectId?: string
+}
+
+export async function registerAccount(input: RegisterInput): Promise<RegisterResult> {
   if (isApiMode()) {
-    const user = await apiRegister(input)
+    const { user, projectId } = await apiRegister(input)
     saveSession(user, true)
     await syncWorkspace()
-    return user
+    return { user, projectId }
   }
 
   await delay(900)
@@ -177,7 +182,7 @@ export async function registerAccount(input: RegisterInput): Promise<User> {
     notificationPrefs: defaultNotificationPrefs(),
   })
   saveSession(user, true)
-  return user
+  return { user }
 }
 
 export function logout() {

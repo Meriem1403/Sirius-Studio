@@ -29,8 +29,9 @@ export default function Contact() {
             <span className="glow-text">gratuitement.</span>
           </h2>
           <p className="text-white/40 text-lg xl:text-xl max-w-xl mx-auto mb-8">
-            Compte obligatoire. Sur la page suivante : Google, Apple, Microsoft, GitHub ou email,{' '}
-            <strong className="text-white/70">plus votre demande de maquette</strong> en un seul formulaire.
+            Quelques informations suffisent. Sirius revient vers vous sous 48 h avec une première maquette.{' '}
+            <strong className="text-white/70">Compte obligatoire</strong> — le même formulaire qu&apos;avant, avec
+            création d&apos;espace client.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to={SIGNUP_MAQUETTE_URL} className="btn-primary inline-flex justify-center">

@@ -12,7 +12,7 @@ echo "→ Register test client"
 EMAIL="test-client-$(date +%s)@sirius.local"
 REG=$(curl -sf -X POST "$BASE/auth/register" \
   -H 'Content-Type: application/json' \
-  -d "{\"name\":\"Test Client\",\"email\":\"$EMAIL\",\"password\":\"TestClient2026!\",\"projectRequest\":{\"title\":\"Projet test local\",\"type\":\"Site vitrine\",\"message\":\"Message de test parcours client minimum dix caractères.\"}}")
+  -d "{\"name\":\"Test Client\",\"email\":\"$EMAIL\",\"password\":\"TestClient2026!\",\"projectRequest\":{\"title\":\"Projet test local\",\"type\":\"Site vitrine\",\"situation\":\"idea\",\"needs\":[\"Site vitrine\"],\"message\":\"Message de test parcours client minimum dix caractères.\"}}")
 TOKEN=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
 PROJECT_ID=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin).get('projectId',''))")
 

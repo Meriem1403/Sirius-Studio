@@ -9,6 +9,7 @@ import AuthFixturesPanel from '../components/auth/AuthFixturesPanel'
 import { useAuth } from '../context/AuthContext'
 import { getSession } from '../lib/auth/authService'
 import { DEFAULT_AUTH_NEXT, resolveClientPostAuthPath } from '../lib/auth/postAuthRedirect'
+import { isDemoFixturesEnabled } from '../lib/api/config'
 import { getWorkspaceCache } from '../lib/api/workspaceSync'
 
 function validateEmail(email: string) {
@@ -97,7 +98,7 @@ export default function LoginPage() {
           Accédez à votre espace pour suivre vos projets Sirius.
         </p>
 
-        <AuthFixturesPanel onSelect={fillFixture} />
+        {isDemoFixturesEnabled() && <AuthFixturesPanel onSelect={fillFixture} />}
 
         <SocialAuthButtons mode="login" />
 
@@ -133,7 +134,7 @@ export default function LoginPage() {
             name="email"
             icon={Mail}
             autoComplete="email"
-            placeholder="marie@demo.sirius"
+            placeholder="vous@entreprise.com"
             value={email}
             onChange={setEmail}
             error={errors.email}
