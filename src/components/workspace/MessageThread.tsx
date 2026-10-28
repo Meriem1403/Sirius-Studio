@@ -3,6 +3,25 @@ import AttachmentList from './AttachmentList'
 import { formatDateTime } from '../../lib/client/format'
 import { FileQuestion } from 'lucide-react'
 
+const URL_RE = /(https?:\/\/[^\s<>"')\]]+)/g
+
+function MessageText({ text }: { text: string }) {
+  const parts = text.split(URL_RE)
+  return (
+    <p className="client-message-bubble-text">
+      {parts.map((part, index) =>
+        part.startsWith('http') ? (
+          <a key={index} className="chat-link" href={part.replace(/[.,;:!?)]+$/, '')} target="_blank" rel="noreferrer">
+            {part}
+          </a>
+        ) : (
+          <span key={index}>{part}</span>
+        ),
+      )}
+    </p>
+  )
+}
+
 interface MessageThreadProps {
   messages: ClientMessage[]
   mine: 'client' | 'team'
@@ -27,7 +46,7 @@ export default function MessageThread({ messages, mine }: MessageThreadProps) {
                 Demande document
               </span>
             )}
-            {m.content && <p className="client-message-bubble-text">{m.content}</p>}
+            {m.content && <MessageText text={m.content} />}
             {m.attachments && m.attachments.length > 0 && (
               <AttachmentList attachments={m.attachments} compact />
             )}

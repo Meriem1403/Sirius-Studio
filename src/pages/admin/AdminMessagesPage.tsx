@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, CalendarClock, FileText, Info, Link2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
 import DocumentRequestForm from '../../components/workspace/DocumentRequestForm'
 import AppointmentRequestForm from '../../components/workspace/AppointmentRequestForm'
 import AppointmentThreadActions from '../../components/workspace/AppointmentThreadActions'
+import ConversationLibrary, { linksInMessages, type LibraryTab } from '../../components/workspace/ConversationLibrary'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import {
   getAllMessagesForAdmin,
@@ -34,7 +35,7 @@ export default function AdminMessagesPage() {
   const [onlyUnread, setOnlyUnread] = useState(false)
   const [onlyPending, setOnlyPending] = useState(false)
   const [clientNames, setClientNames] = useState<Record<string, string>>({})
-  const { messages: allMessages, appointments } = useWorkspace()
+  const { messages: allMessages, appointments, documents } = useWorkspace()
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), [])
 
@@ -69,6 +70,7 @@ export default function AdminMessagesPage() {
   const transcriptRef = useRef<HTMLDivElement>(null)
   const [narrow, setNarrow] = useState(false)
   const [showThread, setShowThread] = useState(projectFilter !== 'all')
+  const [library, setLibrary] = useState<LibraryTab | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 760px)')
@@ -120,7 +122,17 @@ export default function AdminMessagesPage() {
     setShowThread(true)
   }
 
-  const shellClass = `chat-app chat-app--admin ${narrow ? (showThread ? 'chat-app--thread' : 'chat-app--list') : ''}`
+  const shellClass = `chat-app chat-app--admin ${narrow ? (showThread ? 'chat-app--thread' : 'chat-app--list') : ''} ${library ? 'chat-app--library' : ''}`
+  const sharedFiles = messages.reduce((count, message) => count + (message.attachments?.length ?? 0), 0)
+  const projectFiles = active ? documents.filter((doc) => doc.projectId === active.id).length : 0
+  const linkCount = linksInMessages(messages).length + (active ? appointments.filter((item) => item.projectId === active.id && item.meetingUrl).length : 0)
+  const meetingCount = active
+    ? appointments.filter((item) => {
+        if (item.projectId !== active.id) return false
+        if (item.status === 'proposed' || item.status === 'requested') return true
+        return (item.status ?? 'confirmed') === 'confirmed' && new Date(item.startAt).getTime() >= Date.now()
+      }).length
+    : 0
 
   return (
     <div className={shellClass}>
@@ -182,14 +194,37 @@ export default function AdminMessagesPage() {
             Messages
           </button>
           {active ? (
-            <div>
+            <div className="chat-head-id">
               <p className="chat-head-name">{nameOf(active.userId)}</p>
               <p className="chat-head-sub">{active.title}</p>
             </div>
           ) : (
             <p className="chat-head-name">Choisissez une conversation</p>
           )}
+          {active && (
+            <button
+              type="button"
+              className={`chat-info ${library ? 'chat-info--on' : ''}`}
+              aria-label="Liens, documents et rendez-vous"
+              onClick={() => setLibrary((current) => (current ? null : 'links'))}
+            >
+              <Info size={18} />
+            </button>
+          )}
         </header>
+        {active && (
+          <div className="chat-shortcuts">
+            <button type="button" className={library === 'links' ? 'chat-shortcut--on' : ''} onClick={() => setLibrary('links')}>
+              <Link2 size={15} /> Liens <span>{linkCount}</span>
+            </button>
+            <button type="button" className={library === 'files' ? 'chat-shortcut--on' : ''} onClick={() => setLibrary('files')}>
+              <FileText size={15} /> Documents <span>{sharedFiles + projectFiles}</span>
+            </button>
+            <button type="button" className={library === 'meetings' ? 'chat-shortcut--on' : ''} onClick={() => setLibrary('meetings')}>
+              <CalendarClock size={15} /> Rendez-vous <span>{meetingCount}</span>
+            </button>
+          </div>
+        )}
 
         <div className="chat-transcript" ref={transcriptRef}>
           {active && (
@@ -245,6 +280,17 @@ export default function AdminMessagesPage() {
           </footer>
         )}
       </section>
+      {library && active && (
+        <ConversationLibrary
+          tab={library}
+          onTab={setLibrary}
+          onClose={() => setLibrary(null)}
+          title={nameOf(active.userId)}
+          subtitle={active.title}
+          projectId={active.id}
+          messages={messages}
+        />
+      )}
     </div>
   )
 }

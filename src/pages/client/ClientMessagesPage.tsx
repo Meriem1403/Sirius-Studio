@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowLeft, MessageSquare } from 'lucide-react'
+import { ArrowLeft, CalendarClock, FileText, Info, Link2, MessageSquare } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
 import AppointmentRequestForm from '../../components/workspace/AppointmentRequestForm'
 import AppointmentThreadActions from '../../components/workspace/AppointmentThreadActions'
+import ConversationLibrary, { linksInMessages, type LibraryTab } from '../../components/workspace/ConversationLibrary'
 import {
   getMessagesForProject,
   getMessagesForUser,
@@ -31,7 +32,8 @@ export default function ClientMessagesPage() {
   const transcriptRef = useRef<HTMLDivElement>(null)
   const [narrow, setNarrow] = useState(false)
   const [showThread, setShowThread] = useState(Boolean(searchParams.get('project')))
-  const { messages: allMessages } = useWorkspace()
+  const { messages: allMessages, appointments, documents } = useWorkspace()
+  const [library, setLibrary] = useState<LibraryTab | null>(null)
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), [])
 
@@ -105,7 +107,17 @@ export default function ClientMessagesPage() {
       return !query.trim() || label.includes(query.trim().toLowerCase())
     })
     .sort((a, b) => (latest.get(b.id)?.date ?? '').localeCompare(latest.get(a.id)?.date ?? ''))
-  const shellClass = `chat-app chat-app--client ${narrow ? (showThread ? 'chat-app--thread' : 'chat-app--list') : ''}`
+  const shellClass = `chat-app chat-app--client ${narrow ? (showThread ? 'chat-app--thread' : 'chat-app--list') : ''} ${library ? 'chat-app--library' : ''}`
+  const sharedFiles = messages.reduce((count, message) => count + (message.attachments?.length ?? 0), 0)
+  const projectFiles = active ? documents.filter((doc) => doc.projectId === active.id).length : 0
+  const linkCount = linksInMessages(messages).length + (active ? appointments.filter((item) => item.projectId === active.id && item.meetingUrl).length : 0)
+  const meetingCount = active
+    ? appointments.filter((item) => {
+        if (item.projectId !== active.id) return false
+        if (item.status === 'proposed' || item.status === 'requested') return true
+        return (item.status ?? 'confirmed') === 'confirmed' && new Date(item.startAt).getTime() >= Date.now()
+      }).length
+    : 0
 
   if (projects.length === 0) {
     return (
@@ -167,11 +179,34 @@ export default function ClientMessagesPage() {
             <ArrowLeft size={18} />
             Messages
           </button>
-          <div>
+          <div className="chat-head-id">
             <p className="chat-head-name">{active?.title ?? 'Conversation'}</p>
             <p className="chat-head-sub">Sirius Studio</p>
           </div>
+          {active && (
+            <button
+              type="button"
+              className={`chat-info ${library ? 'chat-info--on' : ''}`}
+              aria-label="Liens, documents et rendez-vous"
+              onClick={() => setLibrary((current) => (current ? null : 'links'))}
+            >
+              <Info size={18} />
+            </button>
+          )}
         </header>
+        {active && (
+          <div className="chat-shortcuts">
+            <button type="button" className={library === 'links' ? 'chat-shortcut--on' : ''} onClick={() => setLibrary('links')}>
+              <Link2 size={15} /> Liens <span>{linkCount}</span>
+            </button>
+            <button type="button" className={library === 'files' ? 'chat-shortcut--on' : ''} onClick={() => setLibrary('files')}>
+              <FileText size={15} /> Documents <span>{sharedFiles + projectFiles}</span>
+            </button>
+            <button type="button" className={library === 'meetings' ? 'chat-shortcut--on' : ''} onClick={() => setLibrary('meetings')}>
+              <CalendarClock size={15} /> Rendez-vous <span>{meetingCount}</span>
+            </button>
+          </div>
+        )}
         <div className="chat-transcript" ref={transcriptRef}>
           {active && (
             <AppointmentThreadActions viewer="client" user={user} projectId={active.id} onChange={reload} />
@@ -213,6 +248,17 @@ export default function ClientMessagesPage() {
           </footer>
         )}
       </section>
+      {library && active && (
+        <ConversationLibrary
+          tab={library}
+          onTab={setLibrary}
+          onClose={() => setLibrary(null)}
+          title={active.title}
+          subtitle="Sirius Studio"
+          projectId={active.id}
+          messages={messages}
+        />
+      )}
     </div>
   )
 }
