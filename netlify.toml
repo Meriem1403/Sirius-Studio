@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "22"
   VITE_ENABLE_DEMO_FIXTURES = "false"
+  VITE_ENABLE_OAUTH = "false"
 
 [[redirects]]
   from = "/*"

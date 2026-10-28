@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { config } from './config.js'
 import { pool, runMigrations } from './db.js'
+import { ensureBootstrapAdmin } from './services/bootstrapAdmin.js'
 import { ensureWorkspaceDocuments, seedIfEmpty } from './seed-full.js'
 import { workspaceRoutes } from './routes/workspace.js'
 import { authRoutes } from './routes/auth.js'
@@ -47,6 +48,7 @@ async function main() {
   await pool.query('SELECT 1')
   await runMigrations()
   if (config.seedOnStart) await seedIfEmpty()
+  await ensureBootstrapAdmin()
   await ensureWorkspaceDocuments()
 
   serve({ fetch: app.fetch, port: config.port }, (info) => {

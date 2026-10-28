@@ -358,6 +358,19 @@ body {
   opacity: 0.85;
 }
 
+.auth-social--disabled .auth-social-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.auth-social-notice--muted {
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin-top: 0.75rem;
+}
+
 @media (min-width: 640px) {
   .auth-form-panel {
     padding: 2.25rem;

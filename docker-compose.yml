@@ -23,7 +23,10 @@ services:
       PORT: 3001
       DATABASE_URL: postgresql://sirius:sirius@db:5432/sirius
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      ADMIN_NOTIFY_EMAIL: ${ADMIN_NOTIFY_EMAIL:-admin@sirius.studio}
+      ADMIN_NOTIFY_EMAIL: ${ADMIN_NOTIFY_EMAIL:-sirius.studio22@gmail.com}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-sirius.studio22@gmail.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Meriem Zahzouh}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-Sirius Studio <noreply@sirius.studio>}
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:8080}

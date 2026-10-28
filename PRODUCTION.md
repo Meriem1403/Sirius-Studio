@@ -47,7 +47,26 @@ curl -s https://VOTRE-API/health | grep resend
 # doit afficher "email":"resend" et non "simulated"
 ```
 
-## Phase 3b — Connexion Google / GitHub / Microsoft
+## Phase 3a — Compte admin (votre email)
+
+Dans `.env.production` sur Hetzner ( **ne jamais committer** ) :
+
+```env
+ADMIN_EMAIL=votre@email.com
+ADMIN_PASSWORD=mot-de-passe-fort-8-car-min
+ADMIN_NAME=Votre nom
+ADMIN_NOTIFY_EMAIL=votre@email.com
+```
+
+Au redémarrage de l’API, Sirius **crée ou met à jour** un utilisateur `role=admin` avec cet email. Connexion : `/connexion` → **Espace admin**.
+
+`ADMIN_NOTIFY_EMAIL` = boîte qui reçoit les mails Resend (demandes client, etc.) — souvent la **même** adresse.
+
+---
+
+## Phase 3b — Connexion Google / GitHub / Microsoft (plus tard)
+
+Front : `VITE_ENABLE_OAUTH=true` sur Netlify + clés sur l’API. Tant que c’est `false`, les boutons restent grisés.
 
 1. **Google Cloud Console** → OAuth client **Web**
    - Authorized redirect URI : `https://VOTRE-API/auth/oauth/google/callback`

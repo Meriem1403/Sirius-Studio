@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { AppleIcon, GitHubIcon, GoogleIcon, MicrosoftIcon } from './socialIcons'
 import { FIXTURE_SOCIAL_MAP } from '../../fixtures/users'
 import { useAuth } from '../../context/AuthContext'
-import { isApiMode } from '../../lib/api/config'
+import { isApiMode, isSocialLoginEnabled } from '../../lib/api/config'
 import {
   fetchConfiguredOAuthProviders,
   startOAuthLogin,
@@ -31,6 +31,7 @@ interface SocialAuthButtonsProps {
 }
 
 export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
+  const oauthEnabled = isSocialLoginEnabled()
   const { loginSocial } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -44,9 +45,39 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
     (mode === 'signup' ? DEFAULT_AUTH_NEXT : '/espace-client')
 
   useEffect(() => {
-    if (!apiMode) return
+    if (!oauthEnabled || !apiMode) return
     fetchConfiguredOAuthProviders().then(setAvailable)
-  }, [apiMode])
+  }, [apiMode, oauthEnabled])
+
+  const verb = mode === 'login' ? 'Continuer avec' : "S'inscrire avec"
+
+  if (!oauthEnabled) {
+    return (
+      <div className="auth-social auth-social--disabled" aria-disabled="true">
+        <div className="auth-social-grid">
+          {providers.map(({ id, label, icon: Icon, iconClass }) => (
+            <button
+              key={id}
+              type="button"
+              className="auth-social-btn auth-social-btn--pending auth-social-btn--disabled"
+              disabled
+              title="Bientôt disponible"
+            >
+              <Icon className={`auth-social-icon ${iconClass ?? ''}`} />
+              <span className="auth-social-label">
+                <span className="hidden sm:inline">{verb} </span>
+                {label}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="auth-social-notice auth-social-notice--muted">
+          Connexion Google, Apple, Microsoft et GitHub — <strong>bientôt disponible</strong>. Utilisez{' '}
+          <strong>email et mot de passe</strong> ci-dessous.
+        </p>
+      </div>
+    )
+  }
 
   const handleSocial = async (provider: SocialProvider) => {
     setLoading(provider)
@@ -55,9 +86,7 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
     try {
       if (apiMode) {
         if (!available.includes(provider)) {
-          setError(
-            `Connexion ${provider} : configurez OAuth sur le serveur (PRODUCTION.md), ou utilisez email et mot de passe.`,
-          )
+          setError(`Connexion ${provider} : clés OAuth manquantes sur le serveur.`)
           return
         }
         startOAuthLogin(provider, next)
@@ -74,8 +103,6 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
     }
   }
 
-  const verb = mode === 'login' ? 'Continuer avec' : "S'inscrire avec"
-
   return (
     <div className="auth-social">
       <div className="auth-social-grid">
@@ -89,7 +116,6 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
               onClick={() => handleSocial(id)}
               disabled={!!loading || (apiMode && !configured)}
               aria-busy={loading === id}
-              title={!configured ? 'Connexion disponible dès configuration OAuth sur le serveur' : undefined}
             >
               {loading === id ? (
                 <span className="auth-spinner" aria-hidden="true" />
@@ -104,12 +130,6 @@ export default function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
           )
         })}
       </div>
-
-      {apiMode && available.length === 0 && (
-        <p className="auth-social-notice">
-          Connexion Google / Apple : ajoutez les clés OAuth sur le serveur (voir PRODUCTION.md). En attendant, utilisez email et mot de passe.
-        </p>
-      )}
 
       <AnimatePresence>
         {error && (

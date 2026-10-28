@@ -10,6 +10,11 @@ export function isDemoFixturesEnabled() {
   return import.meta.env.DEV && !isApiMode()
 }
 
+/** Google / Apple / etc. — désactivé par défaut jusqu’à configuration OAuth. */
+export function isSocialLoginEnabled() {
+  return import.meta.env.VITE_ENABLE_OAUTH === 'true'
+}
+
 export function apiBaseUrl() {
   if (!base) return ''
   return base.replace(/\/$/, '')

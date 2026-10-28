@@ -25,6 +25,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sirius}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sirius}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
       ADMIN_NOTIFY_EMAIL: ${ADMIN_NOTIFY_EMAIL:?Set ADMIN_NOTIFY_EMAIL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrateur Sirius}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-Sirius Studio <noreply@example.com>}
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:?Set PUBLIC_APP_URL}
