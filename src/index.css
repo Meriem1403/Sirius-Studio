@@ -5783,15 +5783,26 @@ select.client-input {
   margin-top: 1rem;
 }
 
+.agenda-form,
+.appointment-request-form {
+  min-width: 0;
+  max-width: 100%;
+  container-type: inline-size;
+}
+
 .agenda-form-actions {
-  position: sticky;
-  bottom: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.75rem 0;
-  background: #16181f;
-  z-index: 2;
+  width: 100%;
+  max-width: 100%;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.agenda-form-actions .btn-secondary,
+.agenda-form-actions .btn-primary {
+  flex: 1 1 8rem;
+  justify-content: center;
 }
 
 .appointment-request-form {
@@ -5803,6 +5814,9 @@ select.client-input {
   border-radius: 0.875rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
+  min-width: 0;
+  max-width: 100%;
+  container-type: inline-size;
 }
 
 .agenda-day-dots {
@@ -5823,17 +5837,33 @@ select.client-input {
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .agenda-form-row {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.625rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
-@media (min-width: 480px) {
+.agenda-form-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.agenda-form .admin-input,
+.appointment-request-form .admin-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+@container (min-width: 36rem) {
   .agenda-form-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
