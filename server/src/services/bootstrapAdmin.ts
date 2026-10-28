@@ -1,7 +1,7 @@
 import { pool, uid } from '../db.js'
 import { hashPassword } from './auth.js'
 
-/** Compte admin réel depuis .env (prod) — upsert à chaque démarrage API. */
+/** Crée le compte admin depuis .env. Ne réécrit pas le mot de passe s'il existe déjà. */
 export async function ensureBootstrapAdmin() {
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase()
   const password = process.env.ADMIN_PASSWORD?.trim()
@@ -19,17 +19,15 @@ export async function ensureBootstrapAdmin() {
     return
   }
 
-  const password_hash = await hashPassword(password)
   const { rows } = await pool.query<{ id: string }>(`SELECT id FROM users WHERE LOWER(email) = $1`, [email])
 
   if (rows[0]) {
-    await pool.query(
-      `UPDATE users SET password_hash = $1, name = $2, role = 'admin' WHERE id = $3`,
-      [password_hash, name, rows[0].id],
-    )
-    console.info(`[bootstrap] Compte admin mis à jour : ${email}`)
+    await pool.query(`UPDATE users SET name = $1, role = 'admin' WHERE id = $2`, [name, rows[0].id])
+    console.info(`[bootstrap] Compte admin déjà présent : ${email}`)
     return
   }
+
+  const password_hash = await hashPassword(password)
 
   const id = uid('user')
   await pool.query(

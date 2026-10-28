@@ -10,6 +10,8 @@ import { AuthProvider } from './context/AuthContext'
 import { WorkspaceProvider } from './context/WorkspaceContext'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import SignupPage from './pages/SignupPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import DemandeMaquettePage from './pages/DemandeMaquettePage'
@@ -53,6 +55,8 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/connexion" element={<LoginPage />} />
+                <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
+                <Route path="/mot-de-passe-oublie/nouveau" element={<ResetPasswordPage />} />
                 <Route path="/demande-maquette" element={<DemandeMaquettePage />} />
                 <Route path="/inscription" element={<SignupPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />

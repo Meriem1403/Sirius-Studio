@@ -163,9 +163,9 @@ export default function LoginPage() {
               <span className="auth-checkbox-box" />
               <span>Se souvenir de moi</span>
             </label>
-            <a href="#contact" className="auth-forgot-link">
+            <Link to="/mot-de-passe-oublie" className="auth-forgot-link">
               Mot de passe oublié ?
-            </a>
+            </Link>
           </div>
 
           <button type="submit" className="btn-primary auth-submit w-full" disabled={loading}>

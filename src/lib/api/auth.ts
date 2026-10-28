@@ -27,3 +27,17 @@ export async function apiMe() {
 export function apiLogout() {
   setAuthToken(null)
 }
+
+export async function apiForgotPassword(email: string) {
+  return apiFetch<{ ok: true; message: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function apiResetPassword(token: string, password: string) {
+  return apiFetch<{ ok: true }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  })
+}
