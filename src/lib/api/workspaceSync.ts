@@ -106,10 +106,11 @@ export type WorkspaceCollectionKey =
   | 'appointments'
 
 let persistChain: Promise<void> = Promise.resolve()
+let lastRun: Promise<void> = Promise.resolve()
 
 /** Attendre la fin de toutes les écritures workspace en cours (mode API). */
 export function flushWorkspacePersist(): Promise<void> {
-  return persistChain
+  return lastRun
 }
 
 export function enqueueWorkspacePersist(key: WorkspaceCollectionKey, data: unknown): Promise<void> {
@@ -121,6 +122,7 @@ export function enqueueWorkspacePersist(key: WorkspaceCollectionKey, data: unkno
     })
     window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: { slice: key } }))
   })
+  lastRun = run
   persistChain = run.catch(async (err) => {
     console.error('[workspace] persist failed', key, err)
     if (err instanceof ApiError && err.status === 401) return

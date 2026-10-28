@@ -197,8 +197,16 @@ export async function saveWorkspaceCollection(key: CollectionKey, data: unknown,
 }
 
 export async function upsertAppointments(items: unknown[], user: AuthUser) {
-  if (user.role !== 'admin') throw new Error('FORBIDDEN')
-  const list = Array.isArray(items) ? (items as Record<string, unknown>[]) : []
+  const incoming = Array.isArray(items) ? (items as Record<string, unknown>[]) : []
+  let list = incoming
+  if (user.role !== 'admin') {
+    for (const item of incoming) {
+      if (item.userId !== user.id) throw new Error('FORBIDDEN')
+    }
+    const existing = (await readCollection('appointments')) as Record<string, unknown>[]
+    const kept = existing.filter((item) => item.userId !== user.id)
+    list = [...kept, ...incoming]
+  }
   await writeCollection('appointments', list)
   const ids = list.map((i) => String(i.id))
   if (ids.length === 0) {

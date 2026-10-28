@@ -41,8 +41,10 @@ export function createAppointment(input: {
   location?: string
   meetingUrl?: string
   type: Appointment['type']
+  status?: Appointment['status']
   createdBy: string
   clientName?: string
+  silent?: boolean
 }) {
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)
@@ -69,14 +71,20 @@ export function createAppointment(input: {
     location: input.location?.trim(),
     meetingUrl: input.meetingUrl?.trim(),
     type: input.type,
+    status: input.status ?? 'confirmed',
   }
 
   appendAppointment(appt)
 
+  if (input.silent) return appt
+
+  const statusLabel =
+    appt.status === 'requested' ? 'Demande de rendez-vous' : appt.status === 'proposed' ? 'Créneau proposé' : 'Rendez-vous planifié'
+
   notifyUser({
     userId: input.userId,
     type: 'status',
-    title: `Rendez-vous planifié · ${appt.title}`,
+    title: `${statusLabel} · ${appt.title}`,
     body: `Le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short' }).format(new Date(appt.startAt))}`,
     projectId: input.projectId,
     link: '/espace-client/agenda',
@@ -92,6 +100,15 @@ export function createAppointment(input: {
   })
 
   return appt
+}
+
+export function setAppointmentStatus(id: string, status: NonNullable<Appointment['status']>) {
+  const items = getAppointments()
+  const index = items.findIndex((a) => a.id === id)
+  if (index === -1) return null
+  items[index] = { ...items[index], status }
+  saveAppointments(items)
+  return items[index]
 }
 
 export function deleteAppointment(id: string) {

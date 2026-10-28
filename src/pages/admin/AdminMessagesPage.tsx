@@ -6,6 +6,7 @@ import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
 import DocumentRequestForm from '../../components/workspace/DocumentRequestForm'
+import AppointmentRequestForm from '../../components/workspace/AppointmentRequestForm'
 import {
   getAllMessagesForAdmin,
   getClientName,
@@ -107,6 +108,15 @@ export default function AdminMessagesPage() {
                 projectId={active.id}
                 projectTitle={active.title}
                 onCreated={reload}
+              />
+              <AppointmentRequestForm
+                mode="propose"
+                sender={user}
+                clientUserId={active.userId}
+                clientName={getClientName(active.userId)}
+                projectId={active.id}
+                projectTitle={active.title}
+                onDone={reload}
               />
               <MessageComposer
                 placeholder={`Répondre à ${getClientName(active.userId)}...`}

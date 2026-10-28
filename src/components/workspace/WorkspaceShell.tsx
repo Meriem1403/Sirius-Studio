@@ -36,7 +36,7 @@ export default function WorkspaceShell({ variant, zoneLabel, sidebar, children }
   }, [navOpen])
 
   return (
-    <div className={`workspace-shell workspace-shell--${variant} pt-24 sm:pt-28 pb-12 px-4 sm:px-6`}>
+    <div className={`workspace-shell workspace-shell--${variant}`}>
       <div className="workspace-shell-inner section-inner">
         <aside
           id="workspace-sidebar"

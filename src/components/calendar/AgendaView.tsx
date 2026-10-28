@@ -6,6 +6,7 @@ import {
   APPOINTMENT_TYPE_LABELS,
   createAppointment,
   deleteAppointment,
+  setAppointmentStatus,
 } from '../../lib/services/appointmentService'
 import { getAllProjects, getClientAccount } from '../../lib/services/projectService'
 import { downloadIcs, openGoogleCalendar } from '../../lib/calendar/export'
@@ -38,6 +39,7 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
   const [apiClients, setApiClients] = useState<ClientAccount[]>([])
   const [monthOffset, setMonthOffset] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate())
   const [formError, setFormError] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: planPrefill?.title ?? '',
@@ -121,9 +123,20 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title || !form.startAt || !form.endAt) return
+    if (!form.title.trim()) {
+      setFormError('Indiquez un titre.')
+      return
+    }
+    if (!form.startAt || !form.endAt) {
+      setFormError('Indiquez un début et une fin.')
+      return
+    }
     if (isAdmin && !form.userId) {
-      setFormError('Sélectionnez un client (convertissez d’abord le prospect si besoin).')
+      setFormError('Choisissez un client.')
+      return
+    }
+    if (form.meetingUrl.trim() && !/^https?:\/\//i.test(form.meetingUrl.trim())) {
+      setFormError('Le lien doit commencer par https://')
       return
     }
     setSaving(true)
@@ -140,8 +153,9 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
         location: form.location,
         meetingUrl: form.meetingUrl,
         type: form.type,
+        status: isAdmin ? 'confirmed' : 'requested',
         createdBy: user.id,
-        clientName: clientLabel?.split(' · ')[0],
+        clientName: isAdmin ? clientLabel?.split(' · ')[0] : user.name,
       })
       if (!appt) {
         setFormError('La date de fin doit être postérieure à la date de début.')
@@ -168,6 +182,12 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
     } finally {
       setSaving(false)
     }
+  }
+
+  function statusLabel(status?: Appointment['status']) {
+    if (status === 'requested') return 'Demande client'
+    if (status === 'proposed') return 'Créneau proposé'
+    return 'Confirmé'
   }
 
   const eventsThisMonth = apptsByDay.size
@@ -197,6 +217,7 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1
             const dayAppts = apptsByDay.get(day) ?? []
+            const isSelectedDay = selectedDay === day
             const isToday =
               day === new Date().getDate() &&
               viewDate.getMonth() === new Date().getMonth() &&
@@ -205,54 +226,74 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
               <button
                 key={day}
                 type="button"
-                className={`agenda-cell ${isToday ? 'agenda-cell--today' : ''} ${dayAppts.length ? 'agenda-cell--has-event' : ''}`}
-                onClick={() => dayAppts[0] && setSelectedId(dayAppts[0].id)}
+                className={`agenda-cell ${isToday ? 'agenda-cell--today' : ''} ${isSelectedDay ? 'agenda-cell--selected' : ''} ${dayAppts.length ? 'agenda-cell--has-event' : ''}`}
+                onClick={() => {
+                  setSelectedDay(day)
+                  setSelectedId(dayAppts[0]?.id ?? null)
+                }}
               >
                 <span className="agenda-day-num">{day}</span>
-                {dayAppts.length > 0 && (
-                  <span className="agenda-day-dots">
-                    {dayAppts.slice(0, 3).map((a) => (
-                      <span key={a.id} className="agenda-dot" title={a.title} />
-                    ))}
-                  </span>
-                )}
+                {dayAppts.slice(0, 2).map((a) => (
+                  <span key={a.id} className="agenda-day-label">{a.title}</span>
+                ))}
+                {dayAppts.length > 2 && <span className="agenda-day-more">+{dayAppts.length - 2}</span>}
               </button>
             )
           })}
         </div>
+        {selectedDay != null && (
+          <div className="agenda-day-panel">
+            <h3 className="billing-section-title">
+              {selectedDay} {monthLabel}
+            </h3>
+            {(apptsByDay.get(selectedDay) ?? []).length === 0 ? (
+              <p className="client-muted">Rien de prévu ce jour-là.</p>
+            ) : (
+              <ul className="agenda-event-list">
+                {(apptsByDay.get(selectedDay) ?? []).map((a) => (
+                  <li key={a.id}>
+                    <button type="button" className={`agenda-event-card ${selectedId === a.id ? 'agenda-event-card--active' : ''}`} onClick={() => setSelectedId(a.id)}>
+                      <p className="agenda-event-title">{a.title}</p>
+                      <p className="client-message-hint">{formatDateTime(a.startAt)} · {statusLabel(a.status)}</p>
+                      {isAdmin && <p className="client-message-hint">{a.clientName}</p>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         {eventsThisMonth === 0 && (
           <p className="agenda-calendar-hint client-message-hint">
             {upcomingCount > 0
               ? 'Aucun RDV sur ce mois — changez de mois avec les flèches ou consultez la liste à droite.'
               : isAdmin
                 ? 'Aucun RDV planifié — créez-en un avec le bouton « Nouveau rendez-vous ».'
-                : 'Aucun RDV planifié — l’équipe Sirius vous proposera un créneau par message ou email.'}
+                : 'Aucun rendez-vous pour l’instant. Demandez un créneau ici, ou depuis vos messages.'}
           </p>
         )}
       </div>
 
       <aside className="agenda-side">
-        {isAdmin && (
-          <button type="button" className="btn-primary w-full" onClick={() => setShowForm((v) => !v)}>
-            <CalendarPlus size={16} /> Nouveau rendez-vous
-          </button>
-        )}
+        <button type="button" className="btn-primary w-full" onClick={() => setShowForm((v) => !v)}>
+          <CalendarPlus size={16} /> {isAdmin ? 'Nouveau rendez-vous' : 'Demander un rendez-vous'}
+        </button>
 
-        {showForm && isAdmin && (
-          <form className="agenda-form workspace-panel" onSubmit={handleCreate}>
-            <h3 className="billing-section-title">Planifier un RDV</h3>
+        {showForm && (
+          <form className="agenda-form workspace-panel" noValidate onSubmit={handleCreate}>
+            <h3 className="billing-section-title">{isAdmin ? 'Planifier un RDV' : 'Demander un créneau'}</h3>
             {formError && <p className="client-alert-desc text-red-300">{formError}</p>}
             <label className="billing-field">
               <span className="billing-field-label">Titre</span>
-              <input className="admin-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+                <input className="admin-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </label>
+            {isAdmin && (
             <label className="billing-field">
               <span className="billing-field-label">Client</span>
               <select
                 className="admin-input"
                 value={form.userId}
                 onChange={(e) => setForm({ ...form, userId: e.target.value, projectId: '' })}
-                required
               >
                 <option value="">Choisir…</option>
                 {clients.map((c) => (
@@ -263,11 +304,12 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
                 <span className="client-message-hint">Aucun compte client — convertissez un prospect en client d’abord.</span>
               )}
             </label>
+            )}
             <label className="billing-field">
               <span className="billing-field-label">Projet</span>
               <select className="admin-input" value={form.projectId} onChange={(e) => setForm({ ...form, projectId: e.target.value })}>
                 <option value="">—</option>
-                {projects.filter((p) => !form.userId || p.userId === form.userId).map((p) => (
+                {projects.filter((p) => (isAdmin ? !form.userId || p.userId === form.userId : p.userId === user.id)).map((p) => (
                   <option key={p.id} value={p.id}>{p.title}</option>
                 ))}
               </select>
@@ -283,12 +325,16 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
             <div className="agenda-form-row">
               <label className="billing-field">
                 <span className="billing-field-label">Début</span>
-                <input type="datetime-local" className="admin-input" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value })} required />
+                <input type="datetime-local" className="admin-input" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value, endAt: defaultAppointmentEndLocal(e.target.value) })} />
               </label>
               <label className="billing-field">
                 <span className="billing-field-label">Fin</span>
-                <input type="datetime-local" className="admin-input" value={form.endAt} onChange={(e) => setForm({ ...form, endAt: e.target.value })} required />
+                <input type="datetime-local" className="admin-input" value={form.endAt} onChange={(e) => setForm({ ...form, endAt: e.target.value })} />
               </label>
+            </div>
+            <div className="agenda-form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Annuler</button>
+              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Enregistrement…' : isAdmin ? 'Enregistrer' : 'Envoyer la demande'}</button>
             </div>
             <label className="billing-field">
               <span className="billing-field-label">Lieu / visio</span>
@@ -296,16 +342,12 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
             </label>
             <label className="billing-field">
               <span className="billing-field-label">Lien meeting</span>
-              <input type="url" className="admin-input" value={form.meetingUrl} onChange={(e) => setForm({ ...form, meetingUrl: e.target.value })} placeholder="https://…" />
+              <input type="text" className="admin-input" value={form.meetingUrl} onChange={(e) => setForm({ ...form, meetingUrl: e.target.value })} placeholder="https://…" />
             </label>
             <label className="billing-field">
               <span className="billing-field-label">Notes</span>
               <textarea className="admin-input agenda-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
             </label>
-            <div className="billing-action-row">
-              <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Annuler</button>
-              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
-            </div>
           </form>
         )}
 
@@ -339,7 +381,7 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
           <div className="agenda-detail workspace-panel">
             <p className="client-page-eyebrow">{APPOINTMENT_TYPE_LABELS[selected.type]}</p>
             <h3 className="client-section-title">{selected.title}</h3>
-            <p className="client-message-hint">{formatDateTime(selected.startAt)} → {formatDateTime(selected.endAt)}</p>
+            <p className="client-message-hint">{formatDateTime(selected.startAt)} → {formatDateTime(selected.endAt)} · {statusLabel(selected.status)}</p>
             {selected.projectTitle && <p className="client-message-hint">{selected.projectTitle}</p>}
             {selected.description && <p className="client-detail-desc mt-2">{selected.description}</p>}
             {selected.meetingUrl && (
@@ -354,6 +396,21 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
               <button type="button" className="btn-secondary" onClick={() => downloadIcs(selected)}>
                 <Download size={14} /> Apple / Mac (.ics)
               </button>
+              {isAdmin && selected.status !== 'confirmed' && (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    void (async () => {
+                      setAppointmentStatus(selected.id, 'confirmed')
+                      await flushWorkspacePersist()
+                      onChange?.()
+                    })()
+                  }}
+                >
+                  Confirmer
+                </button>
+              )}
               {isAdmin && (
                 <button
                   type="button"

@@ -138,6 +138,7 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState('')
   const location = useLocation()
   const isHome = location.pathname === '/'
+  const inWorkspace = location.pathname.startsWith('/espace-client') || location.pathname.startsWith('/espace-admin')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -186,12 +187,12 @@ export default function Navbar() {
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 pt-4 sm:pt-5"
+        className={`fixed top-0 left-0 right-0 z-50 ${inWorkspace ? 'px-3 pt-3' : 'px-4 sm:px-6 pt-4 sm:pt-5'}`}
       >
         <nav
-          className={`nav-shell mx-auto section-inner transition-all duration-500 ${
-            scrolled ? 'nav-shell--scrolled' : 'nav-shell--top'
-          }`}
+          className={`nav-shell mx-auto w-full transition-all duration-500 ${
+            inWorkspace ? 'nav-shell--full' : 'section-inner'
+          } ${scrolled ? 'nav-shell--scrolled' : 'nav-shell--top'}`}
         >
           <div className="flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5">
             <Logo size="md" />

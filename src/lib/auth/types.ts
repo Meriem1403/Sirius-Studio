@@ -388,6 +388,7 @@ export interface BillingStats {
 }
 
 export type AppointmentType = 'discovery' | 'review' | 'delivery' | 'kickoff' | 'other'
+export type AppointmentStatus = 'confirmed' | 'proposed' | 'requested'
 
 export interface Appointment {
   id: string
@@ -403,4 +404,5 @@ export interface Appointment {
   location?: string
   meetingUrl?: string
   type: AppointmentType
+  status?: AppointmentStatus
 }

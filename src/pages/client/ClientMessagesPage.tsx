@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
+import AppointmentRequestForm from '../../components/workspace/AppointmentRequestForm'
 import {
   getMessagesForProject,
   getMessagesForUser,
@@ -106,6 +107,16 @@ export default function ClientMessagesPage() {
           <MessageThread messages={messages} />
 
           {activeProject !== 'all' && active && (
+            <>
+            <AppointmentRequestForm
+              mode="request"
+              sender={user}
+              clientUserId={user.id}
+              clientName={user.name}
+              projectId={active.id}
+              projectTitle={active.title}
+              onDone={reload}
+            />
             <MessageComposer
               placeholder={`Message pour ${active.title}...`}
               hint="Joignez un fichier en indiquant de quoi il s'agit et pourquoi vous l'envoyez."
@@ -121,6 +132,7 @@ export default function ClientMessagesPage() {
                 reload()
               }}
             />
+            </>
           )}
         </div>
       )}

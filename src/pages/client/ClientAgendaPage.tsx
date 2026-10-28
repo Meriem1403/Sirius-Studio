@@ -14,7 +14,7 @@ export default function ClientAgendaPage() {
       <WorkspacePageHeader
         eyebrow="Planning"
         title="Mon agenda"
-        subtitle="Vos rendez-vous avec Sirius Studio — ajoutez-les à Google Calendar ou à l'app Calendrier (Mac/iPhone)."
+        subtitle="Demandez un créneau ou consultez ceux déjà prévus. Ajoutez-les à Google Calendar ou à l'app Calendrier."
         icon={Calendar}
       />
       <AgendaView user={user} onChange={refresh} />

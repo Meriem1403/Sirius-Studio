@@ -70,7 +70,7 @@ export default function ClientNewRequestPage() {
         </div>
       </header>
 
-      <form className="contact-shell max-w-3xl" onSubmit={handleSubmit}>
+      <form className="contact-shell" onSubmit={handleSubmit}>
         {error && (
           <p className="client-alert-desc text-red-300 mb-4" role="alert">
             {error}
