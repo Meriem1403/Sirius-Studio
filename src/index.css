@@ -84,6 +84,19 @@ body {
   width: 100%;
 }
 
+@media (min-width: 1024px) {
+  .workspace-topbar {
+    padding: 0;
+  }
+
+  .workspace-topbar .nav-shell--full {
+    border-radius: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+}
+
 .nav-shell--top {
   background: rgba(8, 8, 16, 0.35);
   border-color: rgba(255, 255, 255, 0.04);
@@ -3764,9 +3777,35 @@ select.client-input {
 }
 
 @media (min-width: 1024px) {
+  .workspace-shell {
+    padding: 4.25rem 0 0;
+  }
+
   .workspace-shell > .workspace-shell-inner {
     grid-template-columns: 17rem minmax(0, 1fr);
-    gap: 0.75rem;
+    gap: 0;
+    width: 100%;
+    max-width: none;
+    min-height: calc(100vh - 4.25rem);
+  }
+
+  .workspace-sidebar,
+  .workspace-main {
+    border-radius: 0;
+  }
+
+  .workspace-main {
+    min-height: calc(100vh - 4.25rem);
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .workspace-sidebar {
+    border-top: none;
+    border-left: none;
+    border-bottom: none;
+    box-shadow: none;
   }
 }
 
@@ -3817,9 +3856,9 @@ select.client-input {
 @media (min-width: 1024px) {
   .workspace-sidebar-aside {
     position: sticky;
-    top: 5.25rem;
+    top: 4.25rem;
     align-self: stretch;
-    height: calc(100vh - 6rem);
+    height: calc(100vh - 4.25rem);
   }
 
   .workspace-sidebar-slot {
@@ -3889,6 +3928,27 @@ select.client-input {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #16181f;
   backdrop-filter: blur(8px);
+}
+
+@media (min-width: 1024px) {
+  .workspace-shell .workspace-main,
+  .workspace-shell .workspace-sidebar {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .workspace-shell .workspace-main {
+    min-height: calc(100vh - 4.25rem);
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .workspace-shell .workspace-sidebar {
+    border-top: none;
+    border-left: none;
+    border-bottom: none;
+  }
 }
 
 .workspace-main--client {

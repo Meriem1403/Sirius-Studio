@@ -14,7 +14,7 @@ export default function ClientAgendaPage() {
       <WorkspacePageHeader
         eyebrow="Planning"
         title="Mon agenda"
-        subtitle="Demandez un créneau ou consultez ceux déjà prévus. Ajoutez-les à Google Calendar ou à l'app Calendrier."
+        subtitle="Demandez un créneau ou consultez ceux déjà prévus. Un bouton les ajoute à l'agenda de votre appareil."
         icon={Calendar}
       />
       <AgendaView user={user} onChange={refresh} />

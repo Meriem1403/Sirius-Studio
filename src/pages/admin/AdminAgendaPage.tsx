@@ -29,7 +29,7 @@ export default function AdminAgendaPage() {
         variant="admin"
         eyebrow="Administration"
         title="Agenda"
-        subtitle="Planifiez les rendez-vous clients et exportez-les vers Google Calendar ou Apple."
+        subtitle="Planifiez les rendez-vous clients. Chaque créneau s'ajoute à l'agenda de l'appareil."
         icon={Calendar}
       />
       <AgendaView user={user} isAdmin onChange={refresh} planPrefill={planPrefill} />

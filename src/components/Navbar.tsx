@@ -187,7 +187,7 @@ export default function Navbar() {
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 ${inWorkspace ? 'px-3 pt-3' : 'px-4 sm:px-6 pt-4 sm:pt-5'}`}
+        className={`fixed top-0 left-0 right-0 z-50 ${inWorkspace ? 'workspace-topbar' : 'px-4 sm:px-6 pt-4 sm:pt-5'}`}
       >
         <nav
           className={`nav-shell mx-auto w-full transition-all duration-500 ${

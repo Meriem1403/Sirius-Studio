@@ -54,3 +54,27 @@ export function downloadIcs(appt: Appointment, filename?: string) {
 export function openGoogleCalendar(appt: Appointment) {
   window.open(buildGoogleCalendarUrl(appt), '_blank', 'noopener,noreferrer')
 }
+
+type CalendarSystem = 'apple' | 'windows' | 'google'
+
+function detectCalendarSystem(): CalendarSystem {
+  const ua = navigator.userAgent || ''
+  const platform = navigator.platform || ''
+  const isIpad = platform === 'MacIntel' && navigator.maxTouchPoints > 1
+  if (/iPhone|iPad|iPod/i.test(ua) || isIpad || /Mac/i.test(platform) || /Macintosh/i.test(ua)) {
+    return 'apple'
+  }
+  if (/Win/i.test(platform) || /Windows/i.test(ua)) return 'windows'
+  if (/Android|CrOS/i.test(ua)) return 'google'
+  return 'apple'
+}
+
+/** Ajoute le rendez-vous au calendrier du système, sans choix manuel. */
+export function addToSystemCalendar(appt: Appointment) {
+  const system = detectCalendarSystem()
+  if (system === 'google') {
+    openGoogleCalendar(appt)
+    return
+  }
+  downloadIcs(appt)
+}

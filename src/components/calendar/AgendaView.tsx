@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarPlus, ChevronLeft, ChevronRight, Download, ExternalLink, Trash2 } from 'lucide-react'
+import { CalendarPlus, ChevronLeft, ChevronRight, ExternalLink, Trash2 } from 'lucide-react'
 import type { Appointment, User } from '../../lib/auth/types'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import {
@@ -9,7 +9,7 @@ import {
   setAppointmentStatus,
 } from '../../lib/services/appointmentService'
 import { getAllProjects, getClientAccount } from '../../lib/services/projectService'
-import { downloadIcs, openGoogleCalendar } from '../../lib/calendar/export'
+import { addToSystemCalendar } from '../../lib/calendar/export'
 import { formatDateTime } from '../../lib/client/format'
 import { flushWorkspacePersist } from '../../lib/data/store'
 import { isApiMode } from '../../lib/api/config'
@@ -390,11 +390,8 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
               </a>
             )}
             <div className="billing-action-row mt-4">
-              <button type="button" className="btn-secondary" onClick={() => openGoogleCalendar(selected)}>
-                Google Calendar
-              </button>
-              <button type="button" className="btn-secondary" onClick={() => downloadIcs(selected)}>
-                <Download size={14} /> Apple / Mac (.ics)
+              <button type="button" className="btn-primary" onClick={() => addToSystemCalendar(selected)}>
+                <CalendarPlus size={14} /> Ajouter à mon agenda
               </button>
               {isAdmin && selected.status !== 'confirmed' && (
                 <button
