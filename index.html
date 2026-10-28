@@ -4,14 +4,65 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Sirius Studio — Création de sites web, applications mobiles et logiciels sur mesure. Recevez votre première maquette gratuite, sans engagement." />
+    <title>Sirius Studio — Votre maquette gratuite</title>
+    <meta name="description" content="Sirius Studio crée des sites web, des applications mobiles et des logiciels sur mesure. Recevez votre première maquette gratuite, sans engagement." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://studio-sirius.fr/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Sirius Studio" />
+    <meta property="og:url" content="https://studio-sirius.fr/" />
+    <meta property="og:title" content="Sirius Studio — Votre maquette gratuite" />
+    <meta property="og:description" content="Sites web, applications mobiles et logiciels sur mesure. Première maquette gratuite, sans engagement." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Sirius Studio — Votre maquette gratuite" />
+    <meta name="twitter:description" content="Sites web, applications mobiles et logiciels sur mesure. Première maquette gratuite, sans engagement." />
+    <meta name="theme-color" content="#141820" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <title>Sirius Studio — Votre maquette gratuite</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "Sirius Studio",
+        "url": "https://studio-sirius.fr/",
+        "email": "contact@studio-sirius.fr",
+        "description": "Création de sites web, d'applications mobiles et de logiciels sur mesure. Première maquette gratuite, sans engagement.",
+        "areaServed": "FR",
+        "inLanguage": "fr",
+        "knowsAbout": ["création de sites web", "applications mobiles", "logiciels sur mesure"],
+        "makesOffer": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Création de sites web" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Applications mobiles" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Logiciels sur mesure" } }
+        ]
+      }
+    </script>
+    <style>
+      html, body { margin: 0; background: #141820; color: #f1f5f9; }
+      .seo-fallback { max-width: 42rem; margin: 0 auto; padding: 7rem 1.5rem 4rem; font-family: Inter, system-ui, sans-serif; line-height: 1.6; }
+      .seo-fallback h1 { font-size: 2.4rem; line-height: 1.15; font-weight: 600; margin: 0 0 1rem; }
+      .seo-fallback h2 { font-size: 1.15rem; margin: 1.75rem 0 0.4rem; }
+      .seo-fallback p { margin: 0 0 0.75rem; color: rgba(241, 245, 249, 0.72); }
+      .seo-fallback a { color: #c7d2fe; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <article class="seo-fallback">
+        <p>Sirius Studio</p>
+        <h1>Votre idée mérite d'être visible.</h1>
+        <p>Sirius Studio transforme vos idées en expériences digitales concrètes : sites web, applications mobiles et logiciels sur mesure.</p>
+        <p><a href="/inscription">Demander une maquette gratuite</a></p>
+        <h2>Sites web</h2>
+        <p>Sites vitrines, e-commerce et pages d'atterrissage, de la première maquette au lancement.</p>
+        <h2>Applications mobiles</h2>
+        <p>Applications iOS, Android et cross-platform, avec des parcours clairs.</p>
+        <h2>Logiciels sur mesure</h2>
+        <p>Tableaux de bord, outils internes et produits adaptés à votre activité.</p>
+      </article>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

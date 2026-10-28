@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /espace-client
+Disallow: /espace-admin
+Disallow: /connexion
+Disallow: /mot-de-passe-oublie
+Disallow: /auth/
+
+Sitemap: https://studio-sirius.fr/sitemap.xml

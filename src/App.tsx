@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import CosmicBackground from './components/CosmicBackground'
 import StarField from './components/StarField'
 import Navbar from './components/Navbar'
+import DocumentMeta from './components/DocumentMeta'
 import SkipLink from './components/SkipLink'
 import AccessibilityToolbar from './components/AccessibilityToolbar'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -40,6 +41,7 @@ import ClientNewRequestPage from './pages/client/ClientNewRequestPage'
 export default function App() {
   return (
     <BrowserRouter>
+      <DocumentMeta />
       <AuthProvider>
         <WorkspaceProvider>
           <SkipLink />
