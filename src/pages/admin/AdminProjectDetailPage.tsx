@@ -201,7 +201,7 @@ export default function AdminProjectDetailPage() {
 
       <section className="client-detail-panel client-section workspace-panel">
         <h2 className="client-section-title mb-4">Messagerie projet</h2>
-        <MessageThread messages={messages} />
+        <MessageThread messages={messages} mine="team" />
         <DocumentRequestForm
           admin={user}
           clientUserId={project.userId}

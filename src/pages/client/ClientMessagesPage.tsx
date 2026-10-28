@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { MessageSquare } from 'lucide-react'
+import { ArrowLeft, MessageSquare } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
+import { useWorkspace } from '../../context/WorkspaceContext'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
 import AppointmentRequestForm from '../../components/workspace/AppointmentRequestForm'
@@ -16,6 +16,7 @@ import {
 import { getProjectsForUser } from '../../lib/services/projectService'
 import EmptyState from '../../components/client/EmptyState'
 import type { ClientMessage, ClientProject, MessageAttachment } from '../../lib/auth/types'
+import { formatChatTime, userInitials } from '../../lib/client/format'
 import { isApiMode } from '../../lib/api/config'
 import { fetchApiProjects, fetchMessages, markApiMessagesRead } from '../../lib/api/messages'
 
@@ -27,6 +28,10 @@ export default function ClientMessagesPage() {
   const [messages, setMessages] = useState<ClientMessage[]>([])
   const [reloadKey, setReloadKey] = useState(0)
   const [query, setQuery] = useState('')
+  const transcriptRef = useRef<HTMLDivElement>(null)
+  const [narrow, setNarrow] = useState(false)
+  const [showThread, setShowThread] = useState(Boolean(searchParams.get('project')))
+  const { messages: allMessages } = useWorkspace()
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), [])
 
@@ -68,72 +73,131 @@ export default function ClientMessagesPage() {
     }
   }, [user, activeProject, reloadKey])
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 760px)')
+    const sync = () => setNarrow(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (activeProject === 'all' && projects[0]) setActiveProject(projects[0].id)
+  }, [activeProject, projects])
+
+  useEffect(() => {
+    const box = transcriptRef.current
+    if (box) box.scrollTop = box.scrollHeight
+  }, [messages, activeProject])
+
   if (!user) return null
 
   const active = projects.find((p) => p.id === activeProject)
-  const shownMessages = messages.filter((message) => {
-    const needle = query.trim().toLowerCase()
-    if (!needle) return true
-    return message.content.toLowerCase().includes(needle) || message.projectTitle.toLowerCase().includes(needle)
-  })
+  const latest = new Map<string, ClientMessage>()
+  for (const message of allMessages) {
+    const prev = latest.get(message.projectId)
+    if (!prev || message.date > prev.date) latest.set(message.projectId, message)
+  }
+  const visibleProjects = projects
+    .filter((p) => {
+      const preview = latest.get(p.id)?.content ?? ''
+      const label = `${p.title} ${preview}`.toLowerCase()
+      return !query.trim() || label.includes(query.trim().toLowerCase())
+    })
+    .sort((a, b) => (latest.get(b.id)?.date ?? '').localeCompare(latest.get(a.id)?.date ?? ''))
+  const shellClass = `chat-app chat-app--client ${narrow ? (showThread ? 'chat-app--thread' : 'chat-app--list') : ''}`
+
+  if (projects.length === 0) {
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="Aucun projet"
+        description="Déposez d’abord une demande de projet pour échanger avec l’équipe."
+        actionLabel="Déposer une demande"
+        actionHref="/espace-client/nouvelle-demande"
+      />
+    )
+  }
 
   return (
-    <>
-      <WorkspacePageHeader
-        eyebrow="Communication"
-        title="Messages"
-        subtitle="Échangez avec votre chef de projet et transmettez des fichiers en précisant leur contenu."
-        icon={MessageSquare}
-      />
-
-      {projects.length > 0 && (
-        <div className="message-filters">
-          <input className="admin-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher dans les messages" />
-        <div className="client-filter-row">
-          <button type="button" className={`client-filter-chip ${activeProject === 'all' ? 'client-filter-chip--active' : ''}`} onClick={() => setActiveProject('all')}>Tous</button>
-          {projects.map((p) => (
-            <button key={p.id} type="button" className={`client-filter-chip ${activeProject === p.id ? 'client-filter-chip--active' : ''}`} onClick={() => setActiveProject(p.id)}>{p.title}</button>
-          ))}
-        </div>
-        </div>
-      )}
-
-      {projects.length === 0 ? (
-        <EmptyState
-          icon={MessageSquare}
-          title="Aucun projet"
-          description="Déposez d’abord une demande de projet pour échanger avec l’équipe."
-          actionLabel="Déposer une demande"
-          actionHref="/espace-client/nouvelle-demande"
-        />
-      ) : (
-        <div className="client-messages workspace-panel">
-          <AppointmentThreadActions
-            viewer="client"
-            user={user}
-            projectId={activeProject === 'all' ? undefined : activeProject}
-            onChange={reload}
+    <div className={shellClass}>
+      <aside className="chat-sidebar">
+        <div className="chat-sidebar-head">
+          <h1>Messages</h1>
+          <input
+            className="chat-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher"
           />
-          {shownMessages.length === 0 ? (
-            <p className="client-message-hint">Aucun message ne correspond à cette recherche.</p>
-          ) : (
-            <MessageThread messages={shownMessages} />
-          )}
+        </div>
+        <div className="chat-rows">
+          {visibleProjects.map((p) => {
+            const preview = latest.get(p.id)
+            const unread = allMessages.filter((m) => m.projectId === p.id && m.role === 'team' && !m.read).length
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={`chat-row ${activeProject === p.id ? 'chat-row--on' : ''}`}
+                onClick={() => {
+                  setActiveProject(p.id)
+                  setShowThread(true)
+                }}
+              >
+                <span className="chat-avatar">{userInitials('Sirius')}</span>
+                <span className="chat-row-body">
+                  <span className="chat-row-top">
+                    <span className="chat-row-name">{p.title}</span>
+                    {preview && <span className="chat-row-time">{formatChatTime(preview.date)}</span>}
+                  </span>
+                  <span className="chat-row-preview">{preview?.content?.replace(/\s+/g, ' ').trim() || 'Aucun message'}</span>
+                </span>
+                {unread > 0 && <span className="chat-badge">{unread}</span>}
+              </button>
+            )
+          })}
+          {visibleProjects.length === 0 && <p className="chat-empty">Aucune conversation.</p>}
+        </div>
+      </aside>
 
-          {activeProject !== 'all' && active && (
-            <>
-            <AppointmentRequestForm
-              mode="request"
-              sender={user}
-              clientUserId={user.id}
-              clientName={user.name}
-              projectId={active.id}
-              projectTitle={active.title}
-              onDone={reload}
-            />
+      <section className="chat-main">
+        <header className="chat-head">
+          <button type="button" className="chat-back" onClick={() => setShowThread(false)}>
+            <ArrowLeft size={18} />
+            Messages
+          </button>
+          <div>
+            <p className="chat-head-name">{active?.title ?? 'Conversation'}</p>
+            <p className="chat-head-sub">Sirius Studio</p>
+          </div>
+        </header>
+        <div className="chat-transcript" ref={transcriptRef}>
+          {active && (
+            <AppointmentThreadActions viewer="client" user={user} projectId={active.id} onChange={reload} />
+          )}
+          {messages.length === 0 ? (
+            <p className="chat-empty">Aucun message pour l’instant.</p>
+          ) : (
+            <MessageThread messages={messages} mine="client" />
+          )}
+        </div>
+        {active && (
+          <footer className="chat-dock">
+            <details className="chat-tools">
+              <summary>Demander un rendez-vous</summary>
+              <AppointmentRequestForm
+                mode="request"
+                sender={user}
+                clientUserId={user.id}
+                clientName={user.name}
+                projectId={active.id}
+                projectTitle={active.title}
+                onDone={reload}
+              />
+            </details>
             <MessageComposer
-              placeholder={`Message pour ${active.title}...`}
-              hint="Joignez un fichier en indiquant de quoi il s'agit et pourquoi vous l'envoyez."
+              placeholder="Écrire un message"
               onSend={async (content, attachments) => {
                 await sendMessage({
                   sender: user,
@@ -146,10 +210,9 @@ export default function ClientMessagesPage() {
                 reload()
               }}
             />
-            </>
-          )}
-        </div>
-      )}
-    </>
+          </footer>
+        )}
+      </section>
+    </div>
   )
 }

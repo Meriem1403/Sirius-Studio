@@ -116,10 +116,16 @@ export default function MessageComposer({
       <textarea
         className="client-message-input"
         placeholder={placeholder}
-        rows={3}
+        rows={1}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         disabled={disabled}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            e.currentTarget.form?.requestSubmit()
+          }
+        }}
       />
 
       <div className="client-message-compose-footer">

@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { MessageSquare } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
 import DocumentRequestForm from '../../components/workspace/DocumentRequestForm'
@@ -17,8 +16,8 @@ import {
   sendMessage,
 } from '../../lib/services/messageService'
 import { getAllProjects } from '../../lib/services/projectService'
-import EmptyState from '../../components/client/EmptyState'
 import type { ClientMessage, ClientProject, MessageAttachment } from '../../lib/auth/types'
+import { formatChatTime, userInitials } from '../../lib/client/format'
 import { isApiMode } from '../../lib/api/config'
 import { fetchApiProjects, fetchMessages, fetchProjectClientNames } from '../../lib/api/messages'
 
@@ -67,92 +66,151 @@ export default function AdminMessagesPage() {
     }
   }, [activeProject, reloadKey])
 
+  const transcriptRef = useRef<HTMLDivElement>(null)
+  const [narrow, setNarrow] = useState(false)
+  const [showThread, setShowThread] = useState(projectFilter !== 'all')
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 760px)')
+    const sync = () => setNarrow(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (activeProject === 'all' && projects[0]) setActiveProject(projects[0].id)
+  }, [activeProject, projects])
+
+  useEffect(() => {
+    const box = transcriptRef.current
+    if (box) box.scrollTop = box.scrollHeight
+  }, [messages, activeProject])
+
   if (!user) return null
 
   const active = projects.find((p) => p.id === activeProject)
   const nameOf = (userId: string) => clientNames[userId] || getClientName(userId)
-  const unreadProjects = new Set(allMessages.filter((m) => m.role === 'client' && !m.read).map((m) => m.projectId))
+  const unreadCount = (projectId: string) =>
+    allMessages.filter((m) => m.projectId === projectId && m.role === 'client' && !m.read).length
   const pendingProjects = new Set(
     appointments
       .filter((a) => (a.status === 'proposed' || a.status === 'requested') && a.projectId)
       .map((a) => a.projectId as string),
   )
+  const latest = new Map<string, ClientMessage>()
+  for (const message of allMessages) {
+    const prev = latest.get(message.projectId)
+    if (!prev || message.date > prev.date) latest.set(message.projectId, message)
+  }
   const clientOptions = [...new Map(projects.map((p) => [p.userId, nameOf(p.userId)])).entries()]
-  const visibleProjects = projects.filter((p) => {
-    if (clientFilter !== 'all' && p.userId !== clientFilter) return false
-    if (onlyUnread && !unreadProjects.has(p.id)) return false
-    if (onlyPending && !pendingProjects.has(p.id)) return false
-    const label = `${p.title} ${nameOf(p.userId)}`.toLowerCase()
-    return !query.trim() || label.includes(query.trim().toLowerCase())
-  })
+  const visibleProjects = projects
+    .filter((p) => {
+      if (clientFilter !== 'all' && p.userId !== clientFilter) return false
+      if (onlyUnread && unreadCount(p.id) === 0) return false
+      if (onlyPending && !pendingProjects.has(p.id)) return false
+      const preview = latest.get(p.id)?.content ?? ''
+      const label = `${p.title} ${nameOf(p.userId)} ${preview}`.toLowerCase()
+      return !query.trim() || label.includes(query.trim().toLowerCase())
+    })
+    .sort((a, b) => (latest.get(b.id)?.date ?? '').localeCompare(latest.get(a.id)?.date ?? ''))
+
+  function openProject(id: string) {
+    setActiveProject(id)
+    setShowThread(true)
+  }
+
+  const shellClass = `chat-app chat-app--admin ${narrow ? (showThread ? 'chat-app--thread' : 'chat-app--list') : ''}`
 
   return (
-    <>
-      <WorkspacePageHeader
-        variant="admin"
-        eyebrow="Communication"
-        title="Messages clients"
-        subtitle="Répondez aux clients, joignez des fichiers et demandez des documents avec contexte."
-        icon={MessageSquare}
-      />
-
-      <div className="admin-messages-layout">
-        <aside className="admin-thread-list">
-          <div className="message-filters">
-            <input
-              className="admin-input"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un client ou un projet"
-            />
-            <select className="admin-input" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)}>
-              <option value="all">Tous les clients</option>
-              {clientOptions.map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
-              ))}
-            </select>
-            <div className="client-filter-row">
-              <button type="button" className={`client-filter-chip ${!onlyUnread && !onlyPending ? 'client-filter-chip--active' : ''}`} onClick={() => { setOnlyUnread(false); setOnlyPending(false) }}>Tous</button>
-              <button type="button" className={`client-filter-chip ${onlyUnread ? 'client-filter-chip--active' : ''}`} onClick={() => setOnlyUnread((v) => !v)}>Non lus</button>
-              <button type="button" className={`client-filter-chip ${onlyPending ? 'client-filter-chip--active' : ''}`} onClick={() => setOnlyPending((v) => !v)}>Rendez-vous</button>
-            </div>
-          </div>
-          <button
-            type="button"
-            className={`admin-thread-item ${activeProject === 'all' ? 'admin-thread-item--active' : ''}`}
-            onClick={() => setActiveProject('all')}
-          >
-            Tous les messages
-          </button>
-          {visibleProjects.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`admin-thread-item ${activeProject === p.id ? 'admin-thread-item--active' : ''}`}
-              onClick={() => setActiveProject(p.id)}
-            >
-              <span className="admin-thread-title">{p.title}</span>
-              <span className="admin-thread-client">{nameOf(p.userId)}</span>
-            </button>
-          ))}
-          {visibleProjects.length === 0 && <p className="client-message-hint">Aucune conversation ne correspond.</p>}
-        </aside>
-
-        <div className="admin-thread-panel workspace-panel">
-          <AppointmentThreadActions
-            viewer="admin"
-            user={user}
-            projectId={activeProject === 'all' ? undefined : activeProject}
-            onChange={reload}
+    <div className={shellClass}>
+      <aside className="chat-sidebar">
+        <div className="chat-sidebar-head">
+          <h1>Messages</h1>
+          <input
+            className="chat-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher"
           />
-          {messages.length === 0 ? (
-            <EmptyState icon={MessageSquare} title="Aucun message" description="Les échanges apparaîtront ici." />
-          ) : (
-            <MessageThread messages={messages} />
-          )}
+          <select className="chat-search" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)}>
+            <option value="all">Tous les clients</option>
+            {clientOptions.map(([id, name]) => (
+              <option key={id} value={id}>{name}</option>
+            ))}
+          </select>
+          <div className="chat-chips">
+            <button type="button" className={`chat-chip ${!onlyUnread && !onlyPending ? 'chat-chip--on' : ''}`} onClick={() => { setOnlyUnread(false); setOnlyPending(false) }}>Tous</button>
+            <button type="button" className={`chat-chip ${onlyUnread ? 'chat-chip--on' : ''}`} onClick={() => { setOnlyUnread((v) => !v); setOnlyPending(false) }}>Non lus</button>
+            <button type="button" className={`chat-chip ${onlyPending ? 'chat-chip--on' : ''}`} onClick={() => { setOnlyPending((v) => !v); setOnlyUnread(false) }}>Rendez-vous</button>
+          </div>
+        </div>
+        <div className="chat-rows">
+          {visibleProjects.map((p) => {
+            const preview = latest.get(p.id)
+            const unread = unreadCount(p.id)
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={`chat-row ${activeProject === p.id ? 'chat-row--on' : ''}`}
+                onClick={() => openProject(p.id)}
+              >
+                <span className="chat-avatar">{userInitials(nameOf(p.userId) || p.title)}</span>
+                <span className="chat-row-body">
+                  <span className="chat-row-top">
+                    <span className="chat-row-name">{nameOf(p.userId)}</span>
+                    {preview && <span className="chat-row-time">{formatChatTime(preview.date)}</span>}
+                  </span>
+                  <span className="chat-row-preview">
+                    {p.title}
+                    {preview?.content ? ` · ${preview.content.replace(/\s+/g, ' ').trim()}` : ''}
+                  </span>
+                </span>
+                {unread > 0 && <span className="chat-badge">{unread}</span>}
+              </button>
+            )
+          })}
+          {visibleProjects.length === 0 && <p className="chat-empty">Aucune conversation.</p>}
+        </div>
+      </aside>
 
-          {activeProject !== 'all' && active && (
-            <>
+      <section className="chat-main">
+        <header className="chat-head">
+          <button type="button" className="chat-back" onClick={() => setShowThread(false)}>
+            <ArrowLeft size={18} />
+            Messages
+          </button>
+          {active ? (
+            <div>
+              <p className="chat-head-name">{nameOf(active.userId)}</p>
+              <p className="chat-head-sub">{active.title}</p>
+            </div>
+          ) : (
+            <p className="chat-head-name">Choisissez une conversation</p>
+          )}
+        </header>
+
+        <div className="chat-transcript" ref={transcriptRef}>
+          {active && (
+            <AppointmentThreadActions
+              viewer="admin"
+              user={user}
+              projectId={active.id}
+              onChange={reload}
+            />
+          )}
+          {messages.length === 0 ? (
+            <p className="chat-empty">Aucun message pour l’instant.</p>
+          ) : (
+            <MessageThread messages={messages} mine="team" />
+          )}
+        </div>
+
+        {active && (
+          <footer className="chat-dock">
+            <details className="chat-tools">
+              <summary>Rendez-vous et documents</summary>
               <DocumentRequestForm
                 admin={user}
                 clientUserId={active.userId}
@@ -169,25 +227,24 @@ export default function AdminMessagesPage() {
                 projectTitle={active.title}
                 onDone={reload}
               />
-              <MessageComposer
-                placeholder={`Répondre à ${nameOf(active.userId)}...`}
-                hint="Pièces jointes avec description et motif. Le client reçoit un email si Resend est configuré."
-                onSend={async (content, attachments) => {
-                  await sendMessage({
-                    sender: user,
-                    clientUserId: active.userId,
-                    projectId: active.id,
-                    projectTitle: active.title,
-                    content: content || 'Pièce(s) jointe(s) transmise(s).',
-                    attachments: attachments as MessageAttachment[],
-                  })
-                  reload()
-                }}
-              />
-            </>
-          )}
-        </div>
-      </div>
-    </>
+            </details>
+            <MessageComposer
+              placeholder={`Message à ${nameOf(active.userId)}`}
+              onSend={async (content, attachments) => {
+                await sendMessage({
+                  sender: user,
+                  clientUserId: active.userId,
+                  projectId: active.id,
+                  projectTitle: active.title,
+                  content: content || 'Pièce(s) jointe(s) transmise(s).',
+                  attachments: attachments as MessageAttachment[],
+                })
+                reload()
+              }}
+            />
+          </footer>
+        )}
+      </section>
+    </div>
   )
 }
