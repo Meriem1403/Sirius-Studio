@@ -6282,3 +6282,273 @@ select.client-input {
     flex-shrink: 0;
   }
 }
+
+@keyframes workspace-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.workspace-shell--client {
+  background:
+    radial-gradient(ellipse 70% 42% at 0% 0%, rgba(129, 140, 248, 0.2), transparent 62%),
+    radial-gradient(ellipse 40% 36% at 100% 100%, rgba(45, 212, 191, 0.08), transparent 58%);
+}
+
+.workspace-shell--admin {
+  background:
+    radial-gradient(ellipse 64% 40% at 100% 0%, rgba(251, 191, 36, 0.16), transparent 58%),
+    radial-gradient(ellipse 36% 32% at 0% 100%, rgba(244, 114, 182, 0.08), transparent 55%);
+}
+
+.workspace-shell .workspace-main-content {
+  animation: workspace-rise 0.45s ease;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell--client .workspace-main {
+  background:
+    linear-gradient(180deg, rgba(129, 140, 248, 0.18), transparent 12rem),
+    #1a1830 !important;
+  border-color: rgba(165, 180, 252, 0.22) !important;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell--admin .workspace-main {
+  background:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.14), transparent 12rem),
+    #211c16 !important;
+  border-color: rgba(251, 191, 36, 0.22) !important;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell--client .workspace-sidebar {
+  background:
+    linear-gradient(180deg, rgba(129, 140, 248, 0.2), transparent 14rem),
+    #16142a !important;
+  border-color: rgba(165, 180, 252, 0.2) !important;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell--admin .workspace-sidebar {
+  background:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.16), transparent 14rem),
+    #241c14 !important;
+  border-color: rgba(251, 191, 36, 0.2) !important;
+}
+
+.workspace-shell .client-sidebar-link {
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.workspace-shell .client-sidebar-link:hover {
+  transform: translateX(3px);
+}
+
+.workspace-shell--client .client-sidebar-link--active {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(129, 140, 248, 0.35), rgba(129, 140, 248, 0.08)) !important;
+  box-shadow: inset 3px 0 0 #a5b4fc;
+}
+
+.workspace-shell--admin .admin-sidebar-link--active {
+  color: #fff7e6 !important;
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.28), rgba(251, 191, 36, 0.06)) !important;
+  box-shadow: inset 3px 0 0 #fbbf24;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell .client-stat-card,
+html:not([data-a11y-high-contrast='true']) .workspace-shell .workspace-panel,
+html:not([data-a11y-high-contrast='true']) .workspace-shell .client-project-card,
+html:not([data-a11y-high-contrast='true']) .workspace-shell .billing-doc-card,
+html:not([data-a11y-high-contrast='true']) .workspace-shell .admin-thread-item,
+html:not([data-a11y-high-contrast='true']) .workspace-shell .client-message-bubble {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(129, 140, 248, 0.06)) !important;
+  border-color: rgba(196, 181, 253, 0.28) !important;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell--admin .client-stat-card,
+html:not([data-a11y-high-contrast='true']) .workspace-shell--admin .workspace-panel,
+html:not([data-a11y-high-contrast='true']) .workspace-shell--admin .client-project-card,
+html:not([data-a11y-high-contrast='true']) .workspace-shell--admin .billing-doc-card {
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.1), rgba(255, 255, 255, 0.03)) !important;
+  border-color: rgba(251, 191, 36, 0.28) !important;
+}
+
+html:not([data-a11y-high-contrast='true']) .workspace-shell .client-stat-card:hover,
+html:not([data-a11y-high-contrast='true']) .workspace-shell .workspace-panel:hover {
+  transform: translateY(-2px);
+  border-color: rgba(196, 181, 253, 0.7) !important;
+}
+
+.workspace-shell .workspace-page-header h1,
+.workspace-shell .client-page-header h1 {
+  letter-spacing: -0.03em;
+}
+
+.workspace-page-header-main > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .workspace-shell .workspace-main,
+  .workspace-shell .workspace-sidebar {
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell .workspace-main-content,
+  .workspace-shell .client-sidebar-link,
+  .workspace-shell .client-stat-card,
+  .workspace-shell .workspace-panel {
+    animation: none;
+    transition: none;
+  }
+
+  .workspace-shell .client-sidebar-link:hover,
+  .workspace-shell .client-stat-card:hover,
+  .workspace-shell .workspace-panel:hover {
+    transform: none;
+  }
+}
+
+.legal-page {
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 46rem;
+}
+
+.legal-page h2 {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1.15rem;
+  color: #fff;
+}
+
+.legal-page p {
+  line-height: 1.65;
+}
+
+.legal-page a {
+  color: #c4b5fd;
+}
+
+.client-search,
+.client-list {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.client-search input,
+.client-card-block input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+.client-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+}
+
+.client-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.client-card-name {
+  font-weight: 600;
+  color: #fff;
+}
+
+.client-card-flag {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fecaca;
+  background: rgba(248, 113, 113, 0.16);
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+}
+
+.client-card-meta,
+.client-card-reason {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+}
+
+.client-card-reason {
+  margin-top: 0.35rem;
+}
+
+.client-card-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: min(100%, 18rem);
+  flex: 1;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  cursor: pointer;
+}
+
+.btn-danger:disabled,
+.btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.form-error {
+  margin: 0.5rem 0 0.75rem;
+  color: #fecaca;
+  font-size: 0.875rem;
+}
+
+.privacy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.rights-form {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  max-width: 28rem;
+}
+
+.rights-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rights-form input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}

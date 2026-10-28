@@ -1,17 +1,22 @@
 import { useState } from 'react'
-import { Building2, Mail, Phone, User } from 'lucide-react'
+import { Building2, Download, Mail, Phone, Trash2, User } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import { getProjectsForUser } from '../../lib/services/projectService'
 import { getProfile, updateProfile } from '../../lib/data/store'
 import { getDeliveriesForUser } from '../../lib/services/notificationService'
 import { userInitials } from '../../lib/client/format'
+import { isApiMode } from '../../lib/api/config'
+import { eraseMyAccount, exportMyData } from '../../lib/api/privacy'
+import { ApiError } from '../../lib/api/http'
 import type { NotificationPrefs } from '../../lib/auth/types'
 
 export default function ClientProfilePage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { refresh } = useWorkspace()
   const [saved, setSaved] = useState(false)
+  const [privacyError, setPrivacyError] = useState('')
+  const [privacyPending, setPrivacyPending] = useState(false)
 
   if (!user) return null
 
@@ -34,6 +39,39 @@ export default function ClientProfilePage() {
     setSaved(true)
     refresh()
     setTimeout(() => setSaved(false), 1500)
+  }
+
+  async function handleExport() {
+    setPrivacyError('')
+    setPrivacyPending(true)
+    try {
+      const data = await exportMyData()
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'sirius-mes-donnees.json'
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setPrivacyError(err instanceof ApiError ? err.message : 'Le téléchargement a échoué.')
+    } finally {
+      setPrivacyPending(false)
+    }
+  }
+
+  async function handleErase() {
+    const typed = window.prompt('Cette action efface votre compte. Écrivez EFFACER pour confirmer.')
+    if (typed !== 'EFFACER') return
+    setPrivacyError('')
+    setPrivacyPending(true)
+    try {
+      await eraseMyAccount()
+      logout()
+    } catch (err) {
+      setPrivacyError(err instanceof ApiError ? err.message : 'L’effacement a échoué.')
+      setPrivacyPending(false)
+    }
   }
 
   return (
@@ -165,6 +203,32 @@ export default function ClientProfilePage() {
           </ul>
         </section>
       )}
+
+      <section className="client-section">
+        <h2 className="client-section-title mb-2">Vos données</h2>
+        <p className="client-card-meta mb-4">
+          Téléchargez une copie, ou effacez le compte. Les factures restent anonymisées, pour la comptabilité.
+          Le détail est sur la page confidentialité.
+        </p>
+        {privacyError && <p className="form-error">{privacyError}</p>}
+        <div className="privacy-actions">
+          <a className="btn-secondary" href="/confidentialite">
+            Confidentialité
+          </a>
+          {isApiMode() && (
+            <>
+              <button type="button" className="btn-secondary" disabled={privacyPending} onClick={handleExport}>
+                <Download size={16} />
+                Télécharger mes données
+              </button>
+              <button type="button" className="btn-danger" disabled={privacyPending} onClick={handleErase}>
+                <Trash2 size={16} />
+                Effacer mon compte
+              </button>
+            </>
+          )}
+        </div>
+      </section>
     </>
   )
 }

@@ -14,6 +14,11 @@ const PUBLIC_PAGES: Record<string, { title: string; description: string }> = {
     description:
       'Créez votre compte Sirius Studio et décrivez votre projet pour recevoir une première maquette gratuite.',
   },
+  '/confidentialite': {
+    title: 'Confidentialité — Sirius Studio',
+    description:
+      'Données traitées par Sirius Studio, durée de conservation, droits d’accès, d’effacement et de portabilité.',
+  },
   '/demande-maquette': {
     title: 'Demander une maquette gratuite — Sirius Studio',
     description:

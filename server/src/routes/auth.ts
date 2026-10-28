@@ -27,11 +27,33 @@ const registerSchema = z.object({
 
 export const authRoutes = new Hono()
 
+const loginFailures = new Map<string, { count: number; resetAt: number }>()
+
+function loginLimited(key: string) {
+  const now = Date.now()
+  const current = loginFailures.get(key)
+  if (!current || current.resetAt < now) return false
+  return current.count >= 8
+}
+
+function noteLoginFailure(key: string) {
+  const now = Date.now()
+  const current = loginFailures.get(key)
+  if (!current || current.resetAt < now) {
+    loginFailures.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
+    return
+  }
+  current.count += 1
+}
+
 authRoutes.post('/login', async (c) => {
   const body = loginSchema.safeParse(await c.req.json())
   if (!body.success) return c.json({ error: 'Données invalides.' }, 400)
 
   const email = body.data.email.trim().toLowerCase()
+  if (loginLimited(email)) {
+    return c.json({ error: 'Trop de tentatives. Réessayez dans quelques minutes.' }, 429)
+  }
   const { rows } = await pool.query<{
     id: string
     email: string
@@ -40,12 +62,21 @@ authRoutes.post('/login', async (c) => {
     role: 'client' | 'admin'
     phone: string | null
     password_hash: string
+    blocked_at: string | null
   }>(`SELECT * FROM users WHERE LOWER(email) = $1`, [email])
 
   const row = rows[0]
   if (!row?.password_hash || !(await verifyPassword(body.data.password, row.password_hash))) {
+    noteLoginFailure(email)
     return c.json({ error: 'Email ou mot de passe incorrect.' }, 401)
   }
+  if (row.blocked_at) {
+    return c.json(
+      { error: 'Votre accès à Sirius Studio est suspendu. Pour toute question ou pour exercer vos droits : contact@studio-sirius.fr' },
+      403,
+    )
+  }
+  loginFailures.delete(email)
 
   const token = await signToken(row.id)
   const user = {

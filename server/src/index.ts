@@ -14,10 +14,18 @@ import { prospectRoutes } from './routes/prospects.js'
 import { clientRoutes } from './routes/clients.js'
 import { requestRoutes } from './routes/requests.js'
 import { oauthRoutes } from './routes/oauth.js'
+import { privacyRoutes } from './routes/privacy.js'
 
 const app = new Hono()
 
 app.use('*', logger())
+app.use('*', async (c, next) => {
+  await next()
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  c.header('X-Frame-Options', 'DENY')
+  c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+})
 app.use(
   '*',
   cors({
@@ -41,6 +49,7 @@ app.route('/contact', contactRoutes)
 app.route('/messages', messageRoutes)
 app.route('/prospects', prospectRoutes)
 app.route('/clients', clientRoutes)
+app.route('/privacy', privacyRoutes)
 app.route('/requests', requestRoutes)
 app.route('/workspace', workspaceRoutes)
 

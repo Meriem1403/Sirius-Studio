@@ -109,11 +109,8 @@ export default function Footer() {
             <a href="#contact" className="footer-legal-link">
               Contact
             </a>
-            <a href="#" className="footer-legal-link">
-              Mentions légales
-            </a>
-            <a href="#" className="footer-legal-link">
-              Confidentialité
+            <a href="/confidentialite" className="footer-legal-link">
+              Mentions et confidentialité
             </a>
           </div>
         </div>

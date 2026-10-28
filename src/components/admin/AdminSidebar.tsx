@@ -8,6 +8,7 @@ import {
   LogOut,
   MessageSquare,
   Receipt,
+  ShieldBan,
   Target,
 } from 'lucide-react'
 import { useWorkspace } from '../../context/WorkspaceContext'
@@ -23,6 +24,7 @@ import { userInitials } from '../../lib/client/format'
 const navMain = [
   { to: '/espace-admin', label: 'Vue d\'ensemble', icon: LayoutDashboard, end: true },
   { to: '/espace-admin/portefeuille', label: 'Portefeuille', icon: Briefcase, end: false },
+  { to: '/espace-admin/clients', label: 'Clients', icon: ShieldBan, end: false },
   { to: '/espace-admin/prospection', label: 'Prospection', icon: Target, end: false, badge: 'prospects' as const },
   { to: '/espace-admin/projets', label: 'Projets clients', icon: FolderKanban, end: false, badge: 'validations' as const },
   { to: '/espace-admin/facturation', label: 'Facturation', icon: Receipt, end: false, badge: 'billing' as const },

@@ -9,6 +9,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminRoute from './components/auth/AdminRoute'
 import { AuthProvider } from './context/AuthContext'
 import { WorkspaceProvider } from './context/WorkspaceContext'
+import PrivacyPage from './pages/PrivacyPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
@@ -34,6 +35,7 @@ import AdminProspectionPage from './pages/admin/AdminProspectionPage'
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage'
 import AdminBillingPage from './pages/admin/AdminBillingPage'
 import AdminAgendaPage from './pages/admin/AdminAgendaPage'
+import AdminClientsPage from './pages/admin/AdminClientsPage'
 import ClientBillingPage from './pages/client/ClientBillingPage'
 import ClientAgendaPage from './pages/client/ClientAgendaPage'
 import ClientNewRequestPage from './pages/client/ClientNewRequestPage'
@@ -57,6 +59,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/connexion" element={<LoginPage />} />
+                <Route path="/confidentialite" element={<PrivacyPage />} />
                 <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
                 <Route path="/mot-de-passe-oublie/nouveau" element={<ResetPasswordPage />} />
                 <Route path="/demande-maquette" element={<DemandeMaquettePage />} />
@@ -91,6 +94,7 @@ export default function App() {
                 >
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="portefeuille" element={<AdminPortfolioPage />} />
+                  <Route path="clients" element={<AdminClientsPage />} />
                   <Route path="prospection" element={<AdminProspectionPage />} />
                   <Route path="projets" element={<AdminProjectsPage />} />
                   <Route path="projets/:id" element={<AdminProjectDetailPage />} />
