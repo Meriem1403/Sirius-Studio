@@ -4,10 +4,10 @@ import type { Appointment, User } from '../../lib/auth/types'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import {
   APPOINTMENT_TYPE_LABELS,
-  createAppointment,
   deleteAppointment,
   setAppointmentStatus,
 } from '../../lib/services/appointmentService'
+import { sendAppointmentProposal } from '../../lib/services/appointmentConversation'
 import { getAllProjects, getClientAccount } from '../../lib/services/projectService'
 import { addToSystemCalendar } from '../../lib/calendar/export'
 import { formatDateTime } from '../../lib/client/format'
@@ -135,6 +135,11 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
       setFormError('Choisissez un client.')
       return
     }
+    const project = projects.find((item) => item.id === form.projectId)
+    if (!project) {
+      setFormError('Choisissez un projet : la demande part dans la conversation.')
+      return
+    }
     if (form.meetingUrl.trim() && !/^https?:\/\//i.test(form.meetingUrl.trim())) {
       setFormError('Le lien doit commencer par https://')
       return
@@ -143,25 +148,25 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
     setFormError(null)
     try {
       const clientLabel = clients.find((c) => c.id === form.userId)?.name
-      const appt = createAppointment({
+      const created = await sendAppointmentProposal({
+        sender: user,
+        clientUserId: isAdmin ? form.userId : user.id,
+        clientName: isAdmin ? clientLabel?.split(' · ')[0] ?? 'Client' : user.name,
+        projectId: project.id,
+        projectTitle: project.title,
         title: form.title,
         description: form.description,
-        startAt: localDatetimeToIso(form.startAt),
-        endAt: localDatetimeToIso(form.endAt),
-        userId: isAdmin ? form.userId : user.id,
-        projectId: form.projectId || undefined,
         location: form.location,
         meetingUrl: form.meetingUrl,
         type: form.type,
-        status: isAdmin ? 'confirmed' : 'requested',
-        createdBy: user.id,
-        clientName: isAdmin ? clientLabel?.split(' · ')[0] : user.name,
+        status: isAdmin ? 'proposed' : 'requested',
+        slots: [{ startAt: localDatetimeToIso(form.startAt), endAt: localDatetimeToIso(form.endAt) }],
       })
-      if (!appt) {
+      if (!created) {
         setFormError('La date de fin doit être postérieure à la date de début.')
         return
       }
-      await flushWorkspacePersist()
+      const appt = created[0]
       onChange?.()
       setSelectedId(appt.id)
       setShowForm(false)
@@ -186,7 +191,8 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
 
   function statusLabel(status?: Appointment['status']) {
     if (status === 'requested') return 'Demande client'
-    if (status === 'proposed') return 'Créneau proposé'
+    if (status === 'proposed') return 'En attente du client'
+    if (status === 'declined') return 'Refusé'
     return 'Confirmé'
   }
 
@@ -334,7 +340,7 @@ export default function AgendaView({ user, isAdmin, onChange, planPrefill }: Age
             </div>
             <div className="agenda-form-actions">
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Annuler</button>
-              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Enregistrement…' : isAdmin ? 'Enregistrer' : 'Envoyer la demande'}</button>
+              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Envoi…' : 'Envoyer la demande'}</button>
             </div>
             <label className="billing-field">
               <span className="billing-field-label">Lieu / visio</span>

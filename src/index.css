@@ -3532,6 +3532,67 @@ select.client-input {
   }
 }
 
+.message-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.message-filters .admin-input,
+.message-filters .client-filter-row {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.appointment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  min-width: 0;
+}
+
+.appointment-thread-card,
+.appointment-slot,
+.appointment-slot-draft {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.875rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.appointment-slot-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.appointment-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.appointment-counter {
+  margin-top: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.appointment-slot-draft {
+  margin-bottom: 0.5rem;
+}
+
 .admin-thread-list {
   display: flex;
   flex-direction: column;

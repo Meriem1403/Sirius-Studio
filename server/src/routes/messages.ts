@@ -120,7 +120,9 @@ messageRoutes.post('/mark-read', requireAuth, async (c) => {
   const projectId = c.req.query('project')
 
   if (user.role === 'admin') {
-    await pool.query(`UPDATE messages SET read = TRUE WHERE role = 'client'`)
+    if (projectId) {
+      await pool.query(`UPDATE messages SET read = TRUE WHERE role = 'client' AND project_id = $1`, [projectId])
+    }
   } else {
     let q = `UPDATE messages SET read = TRUE WHERE user_id = $1 AND role = 'team'`
     const params: string[] = [user.id]

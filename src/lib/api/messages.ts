@@ -1,6 +1,17 @@
 import type { ClientMessage, ClientProject } from '../auth/types'
 import { apiFetch } from './http'
 
+export async function fetchProjectClientNames(): Promise<Record<string, string>> {
+  const data = await apiFetch<{ projects: Record<string, unknown>[] }>('/messages/projects')
+  const names: Record<string, string> = {}
+  for (const row of data.projects) {
+    const userId = String(row.user_id ?? '')
+    const name = String(row.client_name ?? '').trim()
+    if (userId && name) names[userId] = name
+  }
+  return names
+}
+
 export async function fetchMessages(projectId?: string) {
   const q = projectId ? `?project=${encodeURIComponent(projectId)}` : ''
   const data = await apiFetch<{ messages: ClientMessage[] }>(`/messages${q}`)

@@ -6,6 +6,7 @@ import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
 import MessageThread from '../../components/workspace/MessageThread'
 import MessageComposer from '../../components/workspace/MessageComposer'
 import AppointmentRequestForm from '../../components/workspace/AppointmentRequestForm'
+import AppointmentThreadActions from '../../components/workspace/AppointmentThreadActions'
 import {
   getMessagesForProject,
   getMessagesForUser,
@@ -25,6 +26,7 @@ export default function ClientMessagesPage() {
   const [projects, setProjects] = useState<ClientProject[]>([])
   const [messages, setMessages] = useState<ClientMessage[]>([])
   const [reloadKey, setReloadKey] = useState(0)
+  const [query, setQuery] = useState('')
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), [])
 
@@ -69,6 +71,11 @@ export default function ClientMessagesPage() {
   if (!user) return null
 
   const active = projects.find((p) => p.id === activeProject)
+  const shownMessages = messages.filter((message) => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return true
+    return message.content.toLowerCase().includes(needle) || message.projectTitle.toLowerCase().includes(needle)
+  })
 
   return (
     <>
@@ -80,11 +87,14 @@ export default function ClientMessagesPage() {
       />
 
       {projects.length > 0 && (
+        <div className="message-filters">
+          <input className="admin-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher dans les messages" />
         <div className="client-filter-row">
           <button type="button" className={`client-filter-chip ${activeProject === 'all' ? 'client-filter-chip--active' : ''}`} onClick={() => setActiveProject('all')}>Tous</button>
           {projects.map((p) => (
             <button key={p.id} type="button" className={`client-filter-chip ${activeProject === p.id ? 'client-filter-chip--active' : ''}`} onClick={() => setActiveProject(p.id)}>{p.title}</button>
           ))}
+        </div>
         </div>
       )}
 
@@ -96,15 +106,19 @@ export default function ClientMessagesPage() {
           actionLabel="Déposer une demande"
           actionHref="/espace-client/nouvelle-demande"
         />
-      ) : messages.length === 0 && activeProject === 'all' ? (
-        <EmptyState
-          icon={MessageSquare}
-          title="Aucun message"
-          description="Choisissez un projet ci-dessus pour démarrer une conversation."
-        />
       ) : (
         <div className="client-messages workspace-panel">
-          <MessageThread messages={messages} />
+          <AppointmentThreadActions
+            viewer="client"
+            user={user}
+            projectId={activeProject === 'all' ? undefined : activeProject}
+            onChange={reload}
+          />
+          {shownMessages.length === 0 ? (
+            <p className="client-message-hint">Aucun message ne correspond à cette recherche.</p>
+          ) : (
+            <MessageThread messages={shownMessages} />
+          )}
 
           {activeProject !== 'all' && active && (
             <>

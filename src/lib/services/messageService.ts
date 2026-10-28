@@ -27,17 +27,25 @@ export function countUnreadMessagesForAdmin() {
   return getMessages().filter((m) => m.role === 'client' && !m.read).length
 }
 
-export async function markAdminMessagesRead() {
+export async function markAdminMessagesRead(projectId?: string) {
   if (isApiMode()) {
-    await markApiMessagesRead()
-    const messages = getMessages().map((m) => (m.role === 'client' ? { ...m, read: true } : m))
+    await markApiMessagesRead(projectId)
+    const messages = getMessages().map((m) => {
+      if (m.role !== 'client') return m
+      if (projectId && m.projectId !== projectId) return m
+      if (!projectId) return m
+      return { ...m, read: true }
+    })
     patchWorkspaceCache({ messages })
     saveMessages(messages)
     return
   }
-  const messages = getMessages().map((m) =>
-    m.role === 'client' ? { ...m, read: true } : m,
-  )
+  const messages = getMessages().map((m) => {
+    if (m.role !== 'client') return m
+    if (projectId && m.projectId !== projectId) return m
+    if (!projectId) return m
+    return { ...m, read: true }
+  })
   saveMessages(messages)
 }
 

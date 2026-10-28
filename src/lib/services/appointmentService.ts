@@ -42,6 +42,7 @@ export function createAppointment(input: {
   meetingUrl?: string
   type: Appointment['type']
   status?: Appointment['status']
+  proposalId?: string
   createdBy: string
   clientName?: string
   silent?: boolean
@@ -72,6 +73,7 @@ export function createAppointment(input: {
     meetingUrl: input.meetingUrl?.trim(),
     type: input.type,
     status: input.status ?? 'confirmed',
+    proposalId: input.proposalId,
   }
 
   appendAppointment(appt)
@@ -100,6 +102,21 @@ export function createAppointment(input: {
   })
 
   return appt
+}
+
+export function confirmAppointmentSlot(id: string) {
+  const items = getAppointments()
+  const current = items.find((a) => a.id === id)
+  if (!current) return null
+  const next = items.map((a) => {
+    if (a.id === id) return { ...a, status: 'confirmed' as const }
+    if (current.proposalId && a.proposalId === current.proposalId && a.id !== id && a.status !== 'declined') {
+      return { ...a, status: 'declined' as const }
+    }
+    return a
+  })
+  saveAppointments(next)
+  return next.find((a) => a.id === id) ?? null
 }
 
 export function setAppointmentStatus(id: string, status: NonNullable<Appointment['status']>) {
