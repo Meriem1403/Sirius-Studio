@@ -19,8 +19,9 @@ export interface PortfolioClient {
   projects: ReturnType<typeof getProjects>
 }
 
-export function getClientPortfolio(): PortfolioClient[] {
-  const clients = FIXTURE_ACCOUNTS.filter((a) => a.role === 'client')
+export function buildClientPortfolio(
+  clients: { id: string; name: string; email: string; company?: string; phone?: string }[],
+): PortfolioClient[] {
   const projects = getProjects()
   const messages = getMessages()
 
@@ -54,8 +55,18 @@ export function getClientPortfolio(): PortfolioClient[] {
   })
 }
 
-export function getPortfolioSummary() {
-  const portfolio = getClientPortfolio()
+export function getClientPortfolio(): PortfolioClient[] {
+  return buildClientPortfolio(
+    FIXTURE_ACCOUNTS.filter((a) => a.role === 'client').map((client) => ({
+      id: client.id,
+      name: client.name,
+      email: client.email,
+      company: client.company,
+    })),
+  )
+}
+
+export function summarizePortfolio(portfolio: PortfolioClient[]) {
   const requests = getDocumentRequests().filter((r) => r.status === 'pending')
   return {
     clientCount: portfolio.length,

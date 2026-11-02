@@ -35,7 +35,10 @@ export async function convertProspectToClient(
   }
 
   const projects = (await readCollection('projects')) as Record<string, unknown>[]
-  const existingForUser = projects.find((p) => p.userId === userId && p.title === input.projectTitle)
+  const owned = projects.filter((p) => p.userId === userId)
+  const sameTitle = owned.find((p) => p.title === input.projectTitle)
+  const newest = [...owned].sort((a, b) => String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? '')))[0]
+  const existingForUser = sameTitle ?? newest
   const projectId = existingForUser ? String(existingForUser.id) : uid('proj')
 
   let createdProject: Record<string, unknown> | null = existingForUser

@@ -1,12 +1,41 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Briefcase, TrendingUp, Users } from 'lucide-react'
 import WorkspacePageHeader from '../../components/workspace/WorkspacePageHeader'
-import { getClientPortfolio, getPortfolioSummary } from '../../lib/services/portfolioService'
+import { fetchClients, type ClientAccount } from '../../lib/api/clients'
+import { isApiMode } from '../../lib/api/config'
+import { useWorkspace } from '../../context/WorkspaceContext'
+import { buildClientPortfolio, getClientPortfolio, summarizePortfolio } from '../../lib/services/portfolioService'
 import { formatDateTime } from '../../lib/client/format'
 
 export default function AdminPortfolioPage() {
-  const portfolio = getClientPortfolio()
-  const summary = getPortfolioSummary()
+  const { projects } = useWorkspace()
+  const [accounts, setAccounts] = useState<ClientAccount[] | null>(null)
+  const [ready, setReady] = useState(!isApiMode())
+
+  useEffect(() => {
+    if (!isApiMode()) return
+    let cancelled = false
+    fetchClients()
+      .then((clients) => {
+        if (!cancelled) setAccounts(clients)
+      })
+      .catch(() => {
+        if (!cancelled) setAccounts([])
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const portfolio = useMemo(() => {
+    if (!isApiMode()) return getClientPortfolio()
+    return buildClientPortfolio(accounts ?? [])
+  }, [accounts, projects])
+  const summary = summarizePortfolio(portfolio)
 
   return (
     <>
@@ -47,6 +76,10 @@ export default function AdminPortfolioPage() {
           </div>
         </div>
       </div>
+
+      {ready && portfolio.length === 0 && (
+        <p className="client-card-meta">Aucun client pour le moment.</p>
+      )}
 
       <div className="portfolio-grid">
         {portfolio.map((client) => (

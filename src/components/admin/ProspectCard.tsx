@@ -227,7 +227,7 @@ export default function ProspectCard({ prospect, busy, linkedProjectId, onStatus
         <form className="prospect-convert-panel" onSubmit={handleConvert}>
           <p className="prospect-actions-label">Conversion en client Sirius</p>
           <p className="client-message-hint mb-2">
-            Crée le compte (email du prospect), un projet dans « Projets clients », et passe le statut à Converti.
+            Crée le compte avec l’e-mail du prospect et ouvre un projet. Si cette personne a déjà un projet, il est réutilisé.
           </p>
           {convertError && <p className="client-alert-desc text-red-300">{convertError}</p>}
           {convertResult ? (
