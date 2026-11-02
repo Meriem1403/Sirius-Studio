@@ -110,7 +110,7 @@ export default function Footer() {
               Contact
             </a>
             <a href="/confidentialite" className="footer-legal-link">
-              Mentions et confidentialité
+              Politique de confidentialité
             </a>
           </div>
         </div>

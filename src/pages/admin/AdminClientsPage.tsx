@@ -69,6 +69,10 @@ export default function AdminClientsPage() {
         title="Clients"
         subtitle="Suspendez un accès. Les données restent jusqu’à une demande d’effacement."
       />
+      <p className="client-card-meta">
+        Le détail est dans la{' '}
+        <a href="/confidentialite" className="auth-inline-link">politique de confidentialité</a>.
+      </p>
 
       {!isApiMode() && (
         <p className="workspace-panel client-card-meta">La liste noire fonctionne avec les comptes réels, pas avec les comptes de démonstration.</p>

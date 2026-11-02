@@ -381,7 +381,18 @@ export default function MaquetteRequestForm({
             }}
           />
           <span className="auth-checkbox-box" />
-          <span>J&apos;accepte les conditions d&apos;utilisation et la politique de confidentialité.</span>
+          <span>
+            J&apos;accepte la{' '}
+            <a
+              href="/confidentialite"
+              className="auth-inline-link"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={(event) => event.stopPropagation()}
+            >
+              politique de confidentialité
+            </a>
+            .
+          </span>
         </label>
       )}
       {errors.terms && <span className="auth-field-error auth-field-error--block">{errors.terms}</span>}
